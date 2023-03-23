@@ -149,17 +149,17 @@ export class XRScene {
               moleculeName,
               new Vector3(0, 1, 0)
             );
-            m.label.plane.setParent(m.root);
+            m.label.plane.setParent(m.mesh);
 
             //mesh component setup part
             mesh.name = "Molecule:" + moleculeName;
             //both are consider part of molecule id
             m.uniqueIds.push(m.label.plane.uniqueId, mesh.uniqueId);
 
-            m.root.position = new Vector3(5.8, 0.88, z);
-            m.root.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
-            m.root.rotate(Vector3.Left(), Math.PI * 0.5, Space.LOCAL);
-            m.root.scaling = new Vector3(0.1, 0.1, 0.1);
+            m.mesh.position = new Vector3(5.8, 0.88, z);
+            m.mesh.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
+            m.mesh.rotate(Vector3.Left(), Math.PI * 0.5, Space.LOCAL);
+            m.mesh.scaling = new Vector3(0.1, 0.1, 0.1);
             z -= 0.15;
 
             //put each child id into the molecule obj id
@@ -189,17 +189,17 @@ export class XRScene {
               new Vector3(0, 1, 0),
               { text: "Result:" + moleculeName }
             );
-            m.label.plane.setParent(m.root);
+            m.label.plane.setParent(m.mesh);
 
             //mesh
             mesh.name = "Molecule:" + moleculeName;
             //both are consider part of molecule id
             m.uniqueIds.push(m.label.plane.uniqueId, mesh.uniqueId);
 
-            m.root.position = new Vector3(5.65, 0.88, 0.2);
-            m.root.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
-            m.root.rotate(Vector3.Left(), Math.PI * 0.5, Space.LOCAL);
-            m.root.scaling = new Vector3(0.08, 0.08, 0.08);
+            m.mesh.position = new Vector3(5.65, 0.88, 0.2);
+            m.mesh.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
+            m.mesh.rotate(Vector3.Left(), Math.PI * 0.5, Space.LOCAL);
+            m.mesh.scaling = new Vector3(0.08, 0.08, 0.08);
 
             //put each child id into the molecule obj id
             mesh.getChildMeshes().forEach((child) => {
@@ -241,12 +241,12 @@ export class XRScene {
         console.log("Reaction:" + result.name);
         const allResult = this.moleculeMg.getAllResults();
         //disable all
-        for (let r of allResult) r.root.setEnabled(false);
+        for (let r of allResult) r.mesh.setEnabled(false);
 
         // start the particle system effect
         this.pEvent.start();
         //enable only for selected for this reaction
-        result.root.setEnabled(true);
+        result.mesh.setEnabled(true);
       }
     };
 

@@ -1,40 +1,51 @@
 import {
   AbstractMesh,
-  PointerDragBehavior,
   Vector3,
   WebXRDefaultExperience,
 } from "babylonjs";
 import { XRScene } from "../Scene/XRScene";
-import { GLOBAL } from "../index"
+import { GLOBAL } from "../index";
 
 export class Collision {
   static OnPicking(xr: WebXRDefaultExperience, xrScene: XRScene) {
     //setup controller drag
-    let mesh: AbstractMesh;
-    let p: AbstractMesh;
+    //let p: AbstractMesh; //dk what is this...
 
-    const pickingAction = (parentMesh?: AbstractMesh) => {
+    const pickingAction = (pickedMesh: AbstractMesh, parentMesh: AbstractMesh) => {
       // make sure we can only pick reactants
-      let m = xrScene.moleculeMg.findReactants(mesh.uniqueId);
+      let m = xrScene.moleculeMg.findReactants(pickedMesh.uniqueId);
       if (m) {
         xrScene.pickedMesh = xrScene.moleculeMg.clone(m); //clone the master mesh
-        console.log("picked mesh: " + xrScene.pickedMesh)
         xrScene.pickedMesh.setParent(parentMesh, true); //set under parent controller's mesh
+        console.log("picked mesh: " + xrScene.pickedMesh);
         xrScene.moleculeMg.currSelected = m;
-        console.log("currently picked: " + m.name)
+        console.log("currently picked: " + m.name);
       }
     };
     const releaseAction = () => {
-      if (mesh && mesh.parent) {
-        mesh.setParent(null);
         xrScene.pickedMesh?.setParent(null);
+        console.log("destroying this mesh: " + xrScene.pickedMesh);
+        xrScene.pickedMesh?.dispose();
+        xrScene.pickedMesh = null;
         xrScene.moleculeMg.currSelected = null;
-        console.log("release mesh: " + mesh.name);
-      }
     };
 
     if (GLOBAL.DEBUG_MODE) {
+      var parentMesh = new AbstractMesh("MousePicking");
       //Mouse Picking
+      xrScene.canvas.addEventListener("pointermove", function (event) {
+        var pickResult = xrScene.scene.pick(
+          xrScene.scene.pointerX,
+          xrScene.scene.pointerY
+        );
+        if(pickResult !== null && pickResult.pickedPoint !== null)
+        {
+          parentMesh.position.x = pickResult.pickedPoint.x;
+          parentMesh.position.y = pickResult.pickedPoint.y;
+          parentMesh.position.z = pickResult.pickedPoint.z;
+        }
+      });
+
       xrScene.canvas.addEventListener("pointerdown", function (event) {
         // Get the object under the mouse pointer
         var pickResult = xrScene.scene.pick(
@@ -42,28 +53,27 @@ export class Collision {
           xrScene.scene.pointerY
         );
 
-        // Check if the picked object is the sphere
+        //Grab mesh
         if (pickResult.hit) {
-          console.log("Picking: " + pickResult.pickedMesh);
-          mesh = pickResult.pickedMesh;
-
-          if (mesh.name.indexOf("Molecule") !== -1) {
-            pickingAction();
-            // need to change picked mesh to the clone mesh
-            pickResult.pickedMesh = xrScene.pickedMesh
+          console.log("Picking: " + pickResult.pickedMesh.parent);
+          if (pickResult.pickedMesh.name.indexOf("Molecule") !== -1) {
+            //Disabling Camera
+            xrScene.sceneCam.camera.detachControl()
+            pickingAction(pickResult.pickedMesh, parentMesh);
           }
-        } 
+        }
       });
 
-      xrScene.canvas.addEventListener("pointerup", function(event) {
+      xrScene.canvas.addEventListener("pointerup", function (event) {
+        //Enabling Camera
+        xrScene.sceneCam.camera.attachControl()
+
+        //Ungrab mesh
         console.log("Mouse button released!");
         releaseAction();
-        console.log("destroying this mesh: " + xrScene.pickedMesh)
-        xrScene.pickedMesh?.dispose();
-        xrScene.pickedMesh = null;
-     });
-    
+      });
     } else {
+      let mesh: AbstractMesh;
       xr.input.onControllerAddedObservable.add((controller) => {
         controller.onMotionControllerInitObservable.add((motionController) => {
           const trigger = motionController.getComponentOfType("trigger");
@@ -78,7 +88,7 @@ export class Collision {
                   controller.uniqueId
                 ))
               ) {
-                console.log("mesh under controllerx pointer: " + mesh.name);
+                console.log("mesh under controllerx pointer: " + mesh);
                 // only allow picking if its a molecule
                 if (mesh.name.indexOf("Molecule") !== -1) {
                   const distance = Vector3.Distance(
@@ -86,7 +96,10 @@ export class Collision {
                     mesh.getAbsolutePosition()
                   );
                   if (distance < 1) {
-                    pickingAction(motionController.rootMesh);
+                    console.log(
+                      "motionController.rootMesh " + motionController.rootMesh
+                    );
+                    pickingAction(mesh, motionController.rootMesh);
                   }
                 }
               } else {

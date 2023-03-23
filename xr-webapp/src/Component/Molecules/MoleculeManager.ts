@@ -139,7 +139,7 @@ export class MoleculeManager
      */
     clone(m : Molecule) : Nullable<AbstractMesh>
     {
-       return m.root.clone(m.root.name + "_clone",null);
+       return m.mesh.clone(m.mesh.name + "_clone",null);
     }
 
 };

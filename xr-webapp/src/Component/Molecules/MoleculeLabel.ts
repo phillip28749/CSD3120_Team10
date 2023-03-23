@@ -20,7 +20,6 @@ export class MoleculeLabel {
   
       var texture = AdvancedDynamicTexture.CreateForMesh(this.plane);
       this.textBlock = new TextBlock(moleculeName);
-      console.log("moleculename: " + moleculeName)
       this.textBlock.text = textOptions?.text ?? moleculeName;
       this.textBlock.color = textOptions?.color?? "white";
       this.textBlock.outlineColor = textOptions?.outlineColor?? "black";

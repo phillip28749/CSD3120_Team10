@@ -3,7 +3,7 @@ import { MoleculeLabel } from './MoleculeLabel'
 import { GLOBAL } from '../../index'
 
 export class Molecule {
-  root: AbstractMesh;
+  mesh: AbstractMesh;
   name: string;
   uniqueIds: number[];
   label : MoleculeLabel;
@@ -13,18 +13,17 @@ export class Molecule {
    * @param name
    *        chemical symbol of molecule/compound
    */
-  constructor(name: string, root: AbstractMesh) {
-    this.root = root;
-    this.root.checkCollisions = true;
+  constructor(name: string, mesh: AbstractMesh) {
+    this.mesh = mesh;
     this.name = name;
     this.uniqueIds = [];
 
     if(GLOBAL.DEBUG_MODE)
     {
-      var pointerDragBehavior = new PointerDragBehavior({dragPlaneNormal: Vector3.Up()});
-      pointerDragBehavior.useObjectOrientationForDragging = false;
+      // var pointerDragBehavior = new PointerDragBehavior({dragPlaneNormal: Vector3.Up()});
+      // pointerDragBehavior.useObjectOrientationForDragging = false;
       
-      this.root.addBehavior(pointerDragBehavior);
+      // this.mesh.addBehavior(pointerDragBehavior);
     }
   }
 }
