@@ -24,15 +24,13 @@ import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui";
 import { MoleculeManager, Molecule, MoleculeLabel } from "./Component/index";
 import { XRScene } from "./Scene/XRScene";
 import { Locomotion } from "./Input/index";
+import { Collision } from "./Physics/Collision";
 import "babylonjs-loaders";
 
 export class App {
   private engine: Engine;
   private canvas: HTMLCanvasElement;
   private authorData: any;
-
-  private xrPromise: Promise<WebXRDefaultExperience>; // xr experience obj
-  private xrPointerMesh: AbstractMesh; // the mesh currently attached under xrcontroller pointer
 
   private xrScene: XRScene;
   private locomotion: Locomotion;
@@ -41,7 +39,6 @@ export class App {
     this.engine = engine;
     this.canvas = canvas;
     this.authorData = authorData;
-    this.xrPointerMesh = null;
     this.locomotion = null;
   }
 
@@ -65,34 +62,6 @@ export class App {
     return this.xrScene.scene;
   }
 
-  /**
-   * Update logic of the xr webapp
-   * @param   scene
-   *          the current scene
-   */
-  update(scene: Scene) {
-    this.xrPromise.then((xr) => {
-      //reaction zone trigger update
-      if (!this.xrPointerMesh) return;
-      if (
-        this.xrPointerMesh.intersectsMesh(
-          this.xrScene.reactionZone,
-          false,
-          true
-        )
-      ) {
-        // reaction trigger logic
-        //console.log("Meshes intersecting!");
-        this.xrScene.moleculeMg.addReactionToList(
-          this.xrScene.moleculeMg.currSelected
-        );
-        this.xrScene.moleculeMg.currSelected = null;
-        this.xrPointerMesh.dispose();
-        this.xrPointerMesh = null;
-      }
-    });
-  }
-
   enableInspector(scene: Scene) {
     window.addEventListener("keydown", (e) => {
       if (e.metaKey && e.shiftKey && e.key === "i") {
@@ -106,95 +75,21 @@ export class App {
   }
 
   /**
-   * Setup the xr controller interaction for rotation and translation
+   * Update logic of the xr webapp
    */
-  setupControllerInteraction() {
-    this.xrPromise.then((xr) => {
-      //setup controller drag
-      let mesh: AbstractMesh;
-      let p: AbstractMesh;
-
-      xr.input.onControllerAddedObservable.add((controller) => {
-        controller.onMotionControllerInitObservable.add((motionController) => {
-          const trigger = motionController.getComponentOfType("trigger");
-          trigger.onButtonStateChangedObservable.add((state) => {
-            if (trigger.changes.pressed) {
-              if (this.xrPointerMesh != null)
-                // make sure only one item is selected at a time
-                return;
-
-              if (
-                (mesh = xr.pointerSelection.getMeshUnderPointer(
-                  controller.uniqueId
-                ))
-              ) {
-                //console.log("mesh under controller pointer: " + mesh.name);
-                // only allow picking if its a molecule
-                if (mesh.name.indexOf("Molecule") !== -1) {
-                  const distance = Vector3.Distance(
-                    motionController.rootMesh.getAbsolutePosition(),
-                    mesh.getAbsolutePosition()
-                  );
-                  if (distance < 1) {
-                    // make sure we can only pick reactants
-                    let m = this.xrScene.moleculeMg.findReactants(mesh.uniqueId);
-                    if (m) {
-                      this.xrPointerMesh = this.xrScene.moleculeMg.clone(m); //clone the master mesh
-                      this.xrPointerMesh.setParent(
-                        motionController.rootMesh,
-                        true
-                      ); //set under parent controller's mesh
-                      this.xrScene.moleculeMg.currSelected = m;
-                    }
-                  }
-                }
-              } else {
-                if (mesh && mesh.parent) {
-                  mesh.setParent(null);
-                  this.xrPointerMesh.setParent(null);
-                  //console.log("release mesh: " + mesh.name);
-                }
-              }
-            }
-          });
-        });
-      });
+  update() {
+    this.xrScene.xrPromise.then((xr) => {
+      Collision.JoinMolecules(this.xrScene)
     });
   }
 
   /**
-   * Initiatize teleportation based locomotion
-   * @param   xr
-   *          WebXRDefaultExperience object from defaultwebxrexperience
-   * @param   featureManager
-   *          WebXRFeaturesManager object from defaultwebxrexperience
-   * @param   ground
-   *          the scene ground mesh used for checking teleportation
+   * Setup the xr controller interaction for rotation and translation
    */
-  initLocomotion(
-    xr: WebXRDefaultExperience,
-    featureManager: WebXRFeaturesManager,
-    ground: AbstractMesh
-  ) {
-    const teleportation = featureManager.enableFeature(
-      WebXRFeatureName.TELEPORTATION,
-      "stable",
-      {
-        xrInput: xr.input,
-        floorMeshes: [ground],
-        timeToTeleport: 4000,
-        useMainComponentOnly: true,
-        defaultTargetMeshOptions: {
-          teleportationFillColor: "#55FF99",
-          teleportationBorderColor: "blue",
-          torusArrowMaterial: ground.material,
-        },
-      },
-      true,
-      true
-    ) as WebXRMotionControllerTeleportation;
-    teleportation.parabolicRayEnabled = true;
-    teleportation.parabolicCheckRadius = 2;
+  setupControllerInteraction() {
+    this.xrScene.xrPromise.then((xr) => {
+      Collision.OnPicking(xr, this.xrScene)
+    });
   }
 
   /**
@@ -217,14 +112,14 @@ export class App {
 
     //var ground = this.scene.getMeshByName("ground");
     //console.log("found:" + ground.name);
-    this.xrPromise = scene.createDefaultXRExperienceAsync({
+    this.xrScene.xrPromise = scene.createDefaultXRExperienceAsync({
       uiOptions: {
         sessionMode: "immersive-vr",
       },
       floorMeshes: [ground],
     });
 
-    this.xrPromise.then((xr) => {
+    this.xrScene.xrPromise.then((xr) => {
       xr.baseExperience.camera.setTransformationFromNonVRCamera(nonVRcamera);
       const featureManager = xr.baseExperience.featuresManager;
       //locomotion

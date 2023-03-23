@@ -7,6 +7,7 @@ import {
   HemisphericLight,
   Mesh,
   MeshBuilder,
+  Nullable,
   Scene,
   SceneLoader,
   Space,
@@ -26,15 +27,23 @@ import { ParticleEvent } from "../Events/index";
 
 export class XRScene {
   canvas: HTMLCanvasElement;
-  xrPromise: Promise<WebXRDefaultExperience>; // xr experience obj
 
   scene: Scene;
   sceneCam: SceneCamera;
   skybox: Mesh;
   hemLight: HemisphericLight;
   pEvent: ParticleEvent;
+  
+  xrPromise: Promise<WebXRDefaultExperience>; // xr experience obj
+  xrPointerMesh: Nullable<AbstractMesh>; // the mesh currently attached under xrcontroller pointer
 
-  moleculeMg: MoleculeManager; // molecule object manager
+  private _moleculeMg: MoleculeManager; // molecule object manager
+  public get moleculeMg(): MoleculeManager {
+    return this._moleculeMg;
+  }
+  public set moleculeMg(value: MoleculeManager) {
+    this._moleculeMg = value;
+  }
   reactBtn: SceneButton;
   resetBtn: SceneButton;
   reactionZone: AbstractMesh; // the mesh representation for the scene's reaction zone
@@ -42,19 +51,28 @@ export class XRScene {
   constructor(engine: Engine, canvas: HTMLCanvasElement) {
     this.moleculeMg = new MoleculeManager();
     this.reactionZone = null;
+    this.xrPointerMesh = null;
     this.canvas = canvas;
     this.pEvent = new ParticleEvent();
     this.scene = new Scene(engine);
     this.sceneCam = new SceneCamera(this.scene, this.canvas);
 
-    this.CreateSkyBox();
     this.CreateLight();
+    this.LoadEnvironment();
     this.LoadMolecules();
     this.CreateSceneBtns();
     this.CreateReactionZone();
 
     //create particles event for reaction effect
     this.pEvent.init(this.scene);
+  }
+
+  LoadEnvironment()
+  {
+    this.CreateSkyBox();
+
+    //Classroom
+    SceneLoader.ImportMeshAsync("", "models/classroom/", "classroom.gltf");
   }
 
   /**
@@ -111,8 +129,6 @@ export class XRScene {
    * @param scene the given scene to load in
    */
   LoadMolecules() {
-    SceneLoader.ImportMeshAsync("", "models/classroom/", "classroom.gltf");
-
     //load molecules
     const moleculesReactants = ["C.glb", "H2.glb", "O2.glb"];
     const moleculesResults = ["C6H6.glb", "CO2.glb"];

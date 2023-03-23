@@ -32,7 +32,7 @@ export class MoleculeManager
      * @param  m
      *         The reactant molecule obj
      */
-    addReactionToList(m : Molecule)
+    addReactionToList(m : Nullable<Molecule>)
     {
         var count = this.reactionList.get(m.name);
         if(count !== undefined)

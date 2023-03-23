@@ -35,7 +35,7 @@ export function createXRScene(canvasID : string, authoringData : { [dataType: st
     scenePromise.then( (scene) => { 
 
         engine.runRenderLoop(()=>{
-            app.update(scene);
+            app.update();
             scene.render();
         });
     });
