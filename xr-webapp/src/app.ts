@@ -1,27 +1,11 @@
 import {
   Engine,
-  WebXRMotionControllerTeleportation,
   Scene,
-  SceneLoader,
-  TransformNode,
-  Vector3,
   Color3,
   MeshBuilder,
-  HemisphericLight,
   StandardMaterial,
-  CubeTexture,
-  Texture,
   FreeCamera,
-  WebXRFeaturesManager,
-  WebXRDefaultExperience,
-  Space,
-  WebXRFeatureName,
-  ExecuteCodeAction,
-  ActionManager,
-  AbstractMesh,
 } from "babylonjs";
-import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui";
-import { MoleculeManager, Molecule, MoleculeLabel } from "./Component/index";
 import { XRScene } from "./Scene/XRScene";
 import { Locomotion } from "./Input/index";
 import { Collision } from "./Physics/Collision";
@@ -79,7 +63,8 @@ export class App {
    */
   update() {
     this.xrScene.xrPromise.then((xr) => {
-      Collision.JoinMolecules(this.xrScene)
+      Collision.JoinMolecules(this.xrScene);
+      Collision.BreakMolecules(this.xrScene);
     });
   }
 

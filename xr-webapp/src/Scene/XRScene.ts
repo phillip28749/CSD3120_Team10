@@ -35,7 +35,7 @@ export class XRScene {
   pEvent: ParticleEvent;
   
   xrPromise: Promise<WebXRDefaultExperience>; // xr experience obj
-  xrPointerMesh: Nullable<AbstractMesh>; // the mesh currently attached under xrcontroller pointer
+  pickedMesh: Nullable<AbstractMesh>; // the mesh currently picked (attached under xrcontroller pointer / mouse pointer)
 
   private _moleculeMg: MoleculeManager; // molecule object manager
   public get moleculeMg(): MoleculeManager {
@@ -51,7 +51,7 @@ export class XRScene {
   constructor(engine: Engine, canvas: HTMLCanvasElement) {
     this.moleculeMg = new MoleculeManager();
     this.reactionZone = null;
-    this.xrPointerMesh = null;
+    this.pickedMesh = null;
     this.canvas = canvas;
     this.pEvent = new ParticleEvent();
     this.scene = new Scene(engine);
@@ -276,5 +276,6 @@ export class XRScene {
     this.reactionZone.material = sphereMat;
     this.reactionZone.material.alpha = 0.5;
     this.reactionZone.isPickable = false;
+    this.reactionZone.checkCollisions = true;
   }
 }

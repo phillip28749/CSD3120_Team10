@@ -11,5 +11,6 @@ export class SceneCamera
         // set the camera's position and target
         this.camera.position = new Vector3(5.8, 1.5, 0);
         this.camera.setTarget(this.camera.position.add(new Vector3(0.5, -0.25, 0)));
+        this.camera.speed = 0.2
     }
 }
