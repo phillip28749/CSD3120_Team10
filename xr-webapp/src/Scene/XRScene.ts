@@ -21,6 +21,8 @@ import {
   MoleculeLabel,
   MoleculeManager,
   SceneButton,
+  ReactionZone,
+  DisplayPanel,
 } from "../Component/index";
 import { SceneCamera } from "../Camera/SceneCamera";
 import { ParticleEvent } from "../Events/index";
@@ -44,13 +46,25 @@ export class XRScene {
   public set moleculeMg(value: MoleculeManager) {
     this._moleculeMg = value;
   }
-  reactBtn: SceneButton;
-  resetBtn: SceneButton;
-  reactionZone: AbstractMesh; // the mesh representation for the scene's reaction zone
+
+  joinReactionParent: AbstractMesh
+  joinBtn: SceneButton;
+  resetJoinBtn: SceneButton;
+  joinReactionZone: ReactionZone; // the mesh representation for the scene's reaction zone
+  joinPanel: DisplayPanel;
+
+  breakReactionZone: ReactionZone; // the mesh representation for the scene's reaction zone
 
   constructor(engine: Engine, canvas: HTMLCanvasElement) {
     this.moleculeMg = new MoleculeManager();
-    this.reactionZone = null;
+
+    this.joinReactionParent = null
+    this.joinBtn = null
+    this.resetJoinBtn = null
+    this.joinPanel = null
+    this.joinReactionZone = null;
+    this.breakReactionZone = null;
+
     this.pickedMesh = null;
     this.canvas = canvas;
     this.pEvent = new ParticleEvent();
@@ -60,8 +74,7 @@ export class XRScene {
     this.CreateLight();
     this.LoadEnvironment();
     this.LoadMolecules();
-    this.CreateSceneBtns();
-    this.CreateReactionZone();
+    this.CreateReactionUI();
 
     //create particles event for reaction effect
     this.pEvent.init(this.scene);
@@ -217,25 +230,25 @@ export class XRScene {
    * Creates and setup the interaction buttons in the scene
    *
    */
-  CreateSceneBtns() {
+  CreateJoinBtns() {
+    //Reset Join
     const onResetClick = () => {
       console.log("Reset clicked");
       this.moleculeMg.clearReactionList();
     };
-    this.resetBtn = new SceneButton(
-      "Reset",
+    this.resetJoinBtn = new SceneButton(
+      "RESET",
       this.scene,
       onResetClick,
+      new Vector3( -0.2, 0, -0.1),
       {},
       { emissiveColor: new Color3(0.5, 0.0, 0.0) }
     );
-    this.resetBtn.position = new Vector3(5.7, 0.83, -0.33);
-    this.resetBtn.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
-    this.resetBtn.rotate(Vector3.Left(), -Math.PI * 0.5, Space.LOCAL);
-    this.resetBtn.scaling = new Vector3(0.1, 0.05, 1);
+    this.resetJoinBtn.setParent(this.joinReactionParent)
 
-    const onReactClick = () => {
-      console.log("React clicked");
+    //Join Reaction
+    const onJoinClick = () => {
+      console.log("Join clicked");
       let result = this.moleculeMg.getResult();
       if (result != null) {
         console.log("Reaction:" + result.name);
@@ -249,33 +262,39 @@ export class XRScene {
         result.mesh.setEnabled(true);
       }
     };
-
-    this.reactBtn = new SceneButton(
-      "React",
+    this.joinBtn = new SceneButton(
+      "JOIN",
       this.scene,
-      onReactClick,
+      onJoinClick,
+      new Vector3(-0.2, 0, 0.1),
       {},
       { emissiveColor: new Color3(0.0, 0.5, 0.0) }
     );
-
-    this.reactBtn.position = new Vector3(5.7, 0.83, -0.15);
-    this.reactBtn.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
-    this.reactBtn.rotate(Vector3.Left(), -Math.PI * 0.5, Space.LOCAL);
-    this.reactBtn.scaling = new Vector3(0.1, 0.05, 1);
+    this.joinBtn.setParent(this.joinReactionParent)
   }
 
-  CreateReactionZone()
+  CreateJoinReactionZone()
   {
     //create reaction zone
-    const sphereMat = new StandardMaterial("sphere-mat");
-    sphereMat.emissiveColor = new Color3(0.5, 0.5, 0.0);
-    this.reactionZone = MeshBuilder.CreateSphere("Reaction Point", {
-      diameter: 0.25,
-    });
-    this.reactionZone.position = new Vector3(5.9, 0.83, -0.33);
-    this.reactionZone.material = sphereMat;
-    this.reactionZone.material.alpha = 0.5;
-    this.reactionZone.isPickable = false;
-    this.reactionZone.checkCollisions = true;
+    this.joinReactionZone = new ReactionZone("JoinZone", new Vector3(0,0,0), { color: new Color3(0.5, 0.5, 0.0), transparency: 0.5, diameter: 0.25})
+    this.joinReactionZone.setParent(this.joinReactionParent)
+  }
+
+  CreateJoinPanel()
+  {
+    //create display panel for the reaction
+    this.joinPanel = new DisplayPanel("JoinPanel", this.scene, new Vector3(0.2, 0.2, 0), { text: "testing this sentence"}, { color: Color3.Blue(), transparency: 0.5})
+    this.joinPanel.scaling.setAll(0.3)
+    this.joinPanel.setParent(this.joinReactionParent)
+  }
+
+  CreateReactionUI()
+  {
+    this.joinReactionParent = new AbstractMesh("joinReactionParent")
+    this.CreateJoinReactionZone()
+    this.CreateJoinPanel()
+    this.CreateJoinBtns();
+    this.joinReactionParent.position = new Vector3(5.85, 0.83, -0.33)
+
   }
 }

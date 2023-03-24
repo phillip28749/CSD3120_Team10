@@ -11,18 +11,19 @@ export class SceneButton extends TransformNode
     textPlane: Mesh
     textBlock: TextBlock
 
-    constructor(text: string, scene: Scene, 
+    constructor(id: string, scene: Scene, 
         triggerCB: TriggerAction,
+        position: Vector3,
         textOptions?: { text?: string, color?: string, outlineColor?: string, outlineWidth?: number, fontFamily?: string, fontSize?: number },
         buttonOptions?:{ emissiveColor?: Color3, width?: number, height?: number},){
         super("PBtn")
 
         //plane btn background
-        this.btnMat = new StandardMaterial("planeBG-material", scene);
+        this.btnMat = new StandardMaterial("btnPlaneMat", scene);
         this.btnMat.backFaceCulling = false; // disable backface culling
         this.btnMat.emissiveColor = buttonOptions?.emissiveColor?? new Color3(0.0, 0.0, 0.0);
         
-        this.btnPlane = MeshBuilder.CreatePlane("bgPlane:", {
+        this.btnPlane = MeshBuilder.CreatePlane("btnPlane:", {
           width: buttonOptions?.width?? 1.5,
           height: buttonOptions?.height?? 1.5,
         });
@@ -30,13 +31,13 @@ export class SceneButton extends TransformNode
         this.btnPlane.setParent(this);
     
         //Text
-        this.textPlane = MeshBuilder.CreatePlane("plane:", {
+        this.textPlane = MeshBuilder.CreatePlane("btnTextPlane:", {
             width: buttonOptions?.width?? 1.5,
             height: buttonOptions?.height?? 1.5,
         });
         var texture = AdvancedDynamicTexture.CreateForMesh(this.textPlane);
-        this.textBlock = new TextBlock(text);
-        this.textBlock.text = text;
+        this.textBlock = new TextBlock(id + "btnText");
+        this.textBlock.text = textOptions?.text?? id;
         this.textBlock.color = textOptions?.color?? "white";
         this.textBlock.outlineColor = textOptions?.outlineColor?? "black";
         this.textBlock.outlineWidth = textOptions?.outlineWidth?? 30;
@@ -59,5 +60,10 @@ export class SceneButton extends TransformNode
         this.btnPlane.actionManager = new ActionManager(scene);
         this.btnPlane.actionManager.registerAction(clickAction);
     
+        //Scene Button properties
+        this.position = position;
+        this.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
+        this.rotate(Vector3.Left(), -Math.PI * 0.5, Space.LOCAL);
+        this.scaling = new Vector3(0.1, 0.05, 1);
     }
 }
