@@ -1,3 +1,5 @@
+import { GLOBAL } from "../Global";
+
 /**
  * A helper class to call events(functions) after X ms
  */
@@ -21,7 +23,7 @@ export class TimeEvent {
                 this.callback()
                 this.stop()
             }, this.ms);
-            //console.log("Event:" + this.timeoutId.toString());
+            //GLOBAL.print("Event:" + this.timeoutId.toString());
         }
       
     }

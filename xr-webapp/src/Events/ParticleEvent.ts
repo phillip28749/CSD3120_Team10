@@ -1,4 +1,5 @@
 import { ParticleSystem, Color4 , Vector3 , Scene , Texture } from "babylonjs";
+import { GLOBAL } from "../Global";
 import { TimeEvent } from "./TimeEvent";
 
 
@@ -56,7 +57,7 @@ export class ParticleEvent
     stop()
     {
         this.particleSystem.stop();
-        //console.log("p stop");
+        //GLOBAL.print("p stop");
     }
     /**
      * Starts the event

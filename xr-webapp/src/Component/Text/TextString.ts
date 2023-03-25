@@ -1,4 +1,4 @@
-import { ActionManager, Color3, ExecuteCodeAction, Mesh, MeshBuilder, Scene, Space, StandardMaterial, TransformNode, Vector3 } from "babylonjs";
+import { Mesh, MeshBuilder, TransformNode, Vector3 } from "babylonjs";
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui";
 
 export class TextString extends TransformNode
@@ -14,7 +14,7 @@ export class TextString extends TransformNode
         super("PTextString")
 
         //Text
-        this.textPlane = MeshBuilder.CreatePlane(id + "TextPlane:", {
+        this.textPlane = MeshBuilder.CreatePlane(id + "TextPlane", {
             width: planeOptions?.width?? 1.5,
             height: planeOptions?.height?? 1.5,
         });

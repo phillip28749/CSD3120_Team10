@@ -10,6 +10,7 @@ import { XRScene } from "./Scene/XRScene";
 import { Locomotion } from "./Input/index";
 import { Collision } from "./Physics/Collision";
 import "babylonjs-loaders";
+import { GLOBAL } from "./Global";
 
 export class App {
   private engine: Engine;
@@ -63,7 +64,7 @@ export class App {
    */
   update() {
     this.xrScene.xrPromise.then((xr) => {
-      Collision.JoinMolecules(this.xrScene);
+      //Collision.JoinMolecules(this.xrScene);
       Collision.BreakMolecules(this.xrScene);
     });
   }
@@ -96,7 +97,7 @@ export class App {
     ground.material = groundMat;
 
     //var ground = this.scene.getMeshByName("ground");
-    //console.log("found:" + ground.name);
+    //GLOBAL.print("found:" + ground.name);
     this.xrScene.xrPromise = scene.createDefaultXRExperienceAsync({
       uiOptions: {
         sessionMode: "immersive-vr",

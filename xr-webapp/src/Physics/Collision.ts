@@ -1,6 +1,6 @@
 import { AbstractMesh, Vector3, WebXRDefaultExperience } from "babylonjs";
 import { XRScene } from "../Scene/XRScene";
-import { GLOBAL } from "../index";
+import { GLOBAL } from "../Global";
 
 export class Collision {
   static OnPicking(xr: WebXRDefaultExperience, xrScene: XRScene) {
@@ -9,19 +9,19 @@ export class Collision {
       parentMesh: AbstractMesh
     ) => {
       // make sure we can only pick reactants
-      let m = xrScene.moleculeMg.findReactants(pickedMesh.uniqueId);
+      let m = xrScene.moleculeMg.findJoinReactants(pickedMesh.uniqueId);
       if (m) {
         xrScene.pickedMesh = xrScene.moleculeMg.clone(m); //clone the master mesh
         xrScene.pickedMesh.setParent(parentMesh, true); //set under parent controller's mesh
-        //console.log("picked mesh: " + xrScene.pickedMesh);
+        //GLOBAL.print("picked mesh: " + xrScene.pickedMesh);
         xrScene.moleculeMg.currSelected = m;
-        //console.log("currently picked: " + m.name);
+        //GLOBAL.print("currently picked: " + m.name);
       }
     };
 
     const releaseAction = () => {
       xrScene.pickedMesh?.setParent(null);
-      //console.log("destroying this mesh: " + xrScene.pickedMesh);
+      //GLOBAL.print("destroying this mesh: " + xrScene.pickedMesh);
       xrScene.pickedMesh?.dispose();
       xrScene.pickedMesh = null;
       xrScene.moleculeMg.currSelected = null;
@@ -52,7 +52,7 @@ export class Collision {
 
         //Grab mesh
         if (pickResult.hit) {
-          //console.log("Picking: " + pickResult.pickedMesh.parent);
+          //GLOBAL.print("Picking: " + pickResult.pickedMesh.parent);
           if (pickResult.pickedMesh.name.indexOf("Molecule") !== -1) {
             //Disabling Camera
             xrScene.sceneCam.camera.detachControl();
@@ -66,7 +66,7 @@ export class Collision {
         xrScene.sceneCam.camera.attachControl();
 
         //Ungrab mesh
-        //console.log("Mouse button released!");
+        //GLOBAL.print("Mouse button released!");
         releaseAction();
       });
     }
@@ -87,7 +87,7 @@ export class Collision {
                 controller.uniqueId
               ))
             ) {
-              console.log("mesh under controllerx pointer: " + pickMesh);
+              GLOBAL.print("mesh under controllerx pointer: " + pickMesh);
               // only allow picking if its a molecule
               if (pickMesh.name.indexOf("Molecule") !== -1) {
                 const distance = Vector3.Distance(
@@ -95,7 +95,7 @@ export class Collision {
                   pickMesh.getAbsolutePosition()
                 );
                 if (distance < 1) {
-                  console.log(
+                  GLOBAL.print(
                     "motionController.rootMesh " + motionController.rootMesh
                   );
                   pickingAction(pickMesh, motionController.rootMesh);
@@ -115,13 +115,24 @@ export class Collision {
     if (!xrScene.pickedMesh) return;
     if (xrScene.pickedMesh.intersectsMesh(xrScene.joinReactionZone.mesh, false, true)) {
       // reaction trigger logic
-      console.log("Meshes intersecting!");
-      xrScene.moleculeMg.addReactionToList(xrScene.moleculeMg.currSelected);
+      GLOBAL.print("Meshes intersecting!");
+      xrScene.moleculeMg.addJoinReactionToList(xrScene.moleculeMg.currSelected);
       xrScene.moleculeMg.currSelected = null;
       xrScene.pickedMesh.dispose();
       xrScene.pickedMesh = null;
     }
   }
 
-  static BreakMolecules(xrScene: XRScene) {}
+  static BreakMolecules(xrScene: XRScene) {
+    //reaction zone trigger update
+    if (!xrScene.pickedMesh) return;
+    if (xrScene.pickedMesh.intersectsMesh(xrScene.breakReactionZone.mesh, false, true)) {
+      // reaction trigger logic
+      GLOBAL.print("Meshes intersecting!");
+      xrScene.moleculeMg.addJoinReactionToList(xrScene.moleculeMg.currSelected);
+      xrScene.moleculeMg.currSelected = null;
+      xrScene.pickedMesh.dispose();
+      xrScene.pickedMesh = null;
+    }
+  }
 }

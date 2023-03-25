@@ -26,6 +26,7 @@ import {
 } from "../Component/index";
 import { SceneCamera } from "../Camera/SceneCamera";
 import { ParticleEvent } from "../Events/index";
+import { GLOBAL } from "../Global";
 
 export class XRScene {
   canvas: HTMLCanvasElement;
@@ -49,20 +50,29 @@ export class XRScene {
 
   joinReactionParent: AbstractMesh;
   joinBtn: SceneButton;
-  resetJoinBtn: SceneButton;
+  joinResetBtn: SceneButton;
   joinReactionZone: ReactionZone; // the mesh representation for the scene's reaction zone
   joinPanel: DisplayPanel;
 
+  breakReactionParent: AbstractMesh;
+  breakBtn: SceneButton;
+  breakResetBtn: SceneButton;
   breakReactionZone: ReactionZone; // the mesh representation for the scene's reaction zone
+  breakPanel: DisplayPanel;
 
   constructor(engine: Engine, canvas: HTMLCanvasElement) {
-    this.moleculeMg = new MoleculeManager();
+    this.moleculeMg = new MoleculeManager(this);
 
     this.joinReactionParent = null;
     this.joinBtn = null;
-    this.resetJoinBtn = null;
+    this.joinResetBtn = null;
     this.joinPanel = null;
     this.joinReactionZone = null;
+    
+    this.breakReactionParent = null;
+    this.breakBtn = null;
+    this.breakResetBtn = null;
+    this.breakPanel = null;
     this.breakReactionZone = null;
 
     this.pickedMesh = null;
@@ -162,7 +172,7 @@ export class XRScene {
             const strIndex = filePath.lastIndexOf(".");
             const moleculeName = filePath.substring(0, strIndex);
             var m: Molecule = new Molecule(moleculeName, mesh);
-            //console.log(moleculeName);
+            //GLOBAL.print(moleculeName);
 
             //text component part
             m.label = new MoleculeLabel(moleculeName, new Vector3(0, 1, 0));
@@ -184,7 +194,7 @@ export class XRScene {
               m.uniqueIds.push(child.uniqueId);
             });
             //add the molecule to the manager as master molecule object
-            this.moleculeMg.pushReactants(m);
+            this.moleculeMg.pushJoinReactants(m);
           }
         });
       });
@@ -198,7 +208,7 @@ export class XRScene {
             const strIndex = filePath.lastIndexOf(".");
             const moleculeName = filePath.substring(0, strIndex);
             var m: Molecule = new Molecule(moleculeName, mesh);
-            //console.log(moleculeName);
+            //GLOBAL.print(moleculeName);
 
             //text
             m.label = new MoleculeLabel(moleculeName, new Vector3(0, 1, 0), {
@@ -221,7 +231,7 @@ export class XRScene {
               m.uniqueIds.push(child.uniqueId);
             });
             mesh.setEnabled(false);
-            this.moleculeMg.pushResult(m);
+            this.moleculeMg.pushJoinResult(m);
           }
         });
       });
@@ -235,26 +245,26 @@ export class XRScene {
   CreateJoinBtns() {
     //Reset Join
     const onResetClick = () => {
-      console.log("Reset clicked");
-      this.moleculeMg.clearReactionList();
+      GLOBAL.print("Reset clicked");
+      this.moleculeMg.clearJoinReactionList();
     };
-    this.resetJoinBtn = new SceneButton(
-      "resetJoinBtn",
+    this.joinResetBtn = new SceneButton(
+      "joinResetBtn",
       this.scene,
       onResetClick,
       new Vector3(-0.2, 0, -0.1),
       { text: "RESET", fontSize: 300, outlineWidth: 30, },
       { emissiveColor: new Color3(0.5, 0.0, 0.0) }
     );
-    this.resetJoinBtn.setParent(this.joinReactionParent);
+    this.joinResetBtn.setParent(this.joinReactionParent);
 
     //Join Reaction
     const onJoinClick = () => {
-      console.log("Join clicked");
-      let result = this.moleculeMg.getResult();
+      GLOBAL.print("Join clicked");
+      let result = this.moleculeMg.getJoinResult();
       if (result != null) {
-        console.log("Reaction:" + result.name);
-        const allResult = this.moleculeMg.getAllResults();
+        GLOBAL.print("Reaction:" + result.name);
+        const allResult = this.moleculeMg.getAllJoinResults();
         //disable all
         for (let r of allResult) r.mesh.setEnabled(false);
 
@@ -296,14 +306,88 @@ export class XRScene {
     this.joinPanel.scaling.setAll(0.3);
     this.joinPanel.setParent(this.joinReactionParent);
 
-    this.joinPanel.AddNewTextSentence("header", { text: "REACTION RESULT", fontSize: 100, outlineWidth: 3, position: new Vector3(0.0, 0.6, 0) })
+    this.joinPanel.AddNewText("joinHeader", { text: "REACTION LIST", fontSize: 100, outlineWidth: 10, position: new Vector3(0.0, 0.6, 0) })
+  }
+
+  
+  CreateBreakBtns() {
+    //Reset Break
+    const onResetClick = () => {
+      GLOBAL.print("Reset clicked");
+      this.moleculeMg.clearJoinReactionList();
+    };
+    this.breakResetBtn = new SceneButton(
+      "breakResetBtn",
+      this.scene,
+      onResetClick,
+      new Vector3(-0.2, 0, -0.1),
+      { text: "RESET", fontSize: 300, outlineWidth: 30, },
+      { emissiveColor: new Color3(0.5, 0.0, 0.0) }
+    );
+    this.breakResetBtn.setParent(this.breakReactionParent);
+
+    //Break Reaction
+    const onBreakClick = () => {
+      GLOBAL.print("Break clicked");
+      let result = this.moleculeMg.getJoinResult();
+      if (result != null) {
+        GLOBAL.print("Reaction:" + result.name);
+        const allResult = this.moleculeMg.getAllJoinResults();
+        //disable all
+        for (let r of allResult) r.mesh.setEnabled(false);
+
+        // start the particle system effect
+        this.pEvent.start();
+        //enable only for selected for this reaction
+        result.mesh.setEnabled(true);
+      }
+    };
+    this.breakBtn = new SceneButton(
+      "breakBtn",
+      this.scene,
+      onBreakClick,
+      new Vector3(-0.2, 0, 0.1),
+      { text: "BREAK", fontSize: 300, outlineWidth: 30, },
+      { emissiveColor: new Color3(0.0, 0.5, 0.0) }
+    );
+    this.breakBtn.setParent(this.breakReactionParent);
+  }
+
+  CreateBreakReactionZone() {
+    //create reaction zone
+    this.breakReactionZone = new ReactionZone("breakZone", new Vector3(0, 0, 0), {
+      color: new Color3(0.5, 0.5, 0.0),
+      transparency: 0.5,
+      diameter: 0.25,
+    });
+    this.breakReactionZone.setParent(this.breakReactionParent);
+  }
+
+  CreateBreakPanel() {
+    //create display panel for the reaction
+    this.breakPanel = new DisplayPanel(
+      "breakPanel",
+      this.scene,
+      new Vector3(0.2, 0.2, 0),
+      { color: Color3.Blue(), transparency: 0.3 }
+    );
+    this.breakPanel.scaling.setAll(0.3);
+    this.breakPanel.setParent(this.breakReactionParent);
+
+    this.breakPanel.AddNewText("breakHeader", { text: "REACTION LIST", fontSize: 100, outlineWidth: 10, position: new Vector3(0.0, 0.6, 0) })
   }
 
   CreateReactionUI() {
-    this.joinReactionParent = new AbstractMesh("joinReactionParent");
-    this.CreateJoinReactionZone();
-    this.CreateJoinPanel();
-    this.CreateJoinBtns();
-    this.joinReactionParent.position = new Vector3(5.85, 0.83, -0.33);
+    // this.joinReactionParent = new AbstractMesh("joinReactionParent");
+    // this.CreateJoinReactionZone();
+    // this.CreateJoinPanel();
+    // this.CreateJoinBtns();
+    // this.joinReactionParent.position = new Vector3(5.85, 0.83, -0.33);
+    
+    this.breakReactionParent = new AbstractMesh("breakReactionParent");
+    this.CreateBreakReactionZone();
+    this.CreateBreakPanel();
+    this.CreateBreakBtns();
+    this.breakReactionParent.position = new Vector3(5.85, 0.83, -0.33);
   }
 }

@@ -1,6 +1,6 @@
 import { AbstractMesh, PointerDragBehavior, Vector3 } from "babylonjs";
 import { MoleculeLabel } from './MoleculeLabel'
-import { GLOBAL } from '../../index'
+import { GLOBAL } from "../../Global";
 
 export class Molecule {
   mesh: AbstractMesh;

@@ -1,4 +1,6 @@
-import {AbstractMesh, Nullable } from "babylonjs";
+import {AbstractMesh, Nullable, Vector3 } from "babylonjs";
+import { GLOBAL } from "../../Global";
+import { XRScene } from "../../Scene/XRScene";
 import {Molecule} from './Molecule'
 
 /**
@@ -6,25 +8,29 @@ import {Molecule} from './Molecule'
  */
 export class MoleculeManager
 {   
+    private xrScene: XRScene
+
     currSelected : Nullable<Molecule>;                  // currently selected molecule
-    private reactants : Molecule[];                 // the available reactants
-    private result: Molecule[];                     // the available results for reactions
-    private reactionList : Map<string,number>;      // list molecule and its count in the reaction list
+    private joinReactants : Molecule[];                 // the available reactants
+    private joinResult: Molecule[];                     // the available results for reactions
+    private joinReactionList : Map<string,number>;      // list molecule and its count in the reaction list
 
     /**
      * Default constructs a molecule manager
      */
-    constructor()
+    constructor(xrScene: XRScene)
     {
+        this.xrScene = xrScene
+
         this.currSelected = null;
-        this.reactants = [];
-        this.result = [];
-        this.reactionList = new Map<string,number>();
+        this.joinReactants = [];
+        this.joinResult = [];
+        this.joinReactionList = new Map<string,number>();
     }
 
-    getAllResults() : Molecule[]
+    getAllJoinResults() : Molecule[]
     {
-        return this.result;
+        return this.joinResult;
     }
 
     /**
@@ -32,27 +38,44 @@ export class MoleculeManager
      * @param  m
      *         The reactant molecule obj
      */
-    addReactionToList(m : Nullable<Molecule>)
+    private static joinCounter : number = 0
+    addJoinReactionToList(m : Nullable<Molecule>)
     {
-        var count = this.reactionList.get(m.name);
+        var count = this.joinReactionList.get(m.name);
         if(count !== undefined)
         {
             ++count;
-            console.log("Add reaction name:" + m.name);
-            this.reactionList.set(m.name, count);
+            GLOBAL.print("Add reaction name:" + m.name);
+            this.joinReactionList.set(m.name, count);
+
+            //Add to display panel (create 4 rows 4 columns)
+            const numRows = 4
+            const numCols= 4
+            const numMol = numRows * numCols
+
+            const rowNo =  MoleculeManager.joinCounter % numRows
+            const colNo =  Math.floor(MoleculeManager.joinCounter / numRows)
+
+            MoleculeManager.joinCounter++
+            if(MoleculeManager.joinCounter >= numMol) MoleculeManager.joinCounter = 0;
+
+            const textPos =  new Vector3(-0.5 + colNo * 0.3, 0.3 + rowNo * -0.2, 0)
+            this.xrScene.joinPanel.AddNewText(m.name + count, { text: m.name, fontSize: 70, outlineWidth: 7, position: textPos, color: "grey" })
         }
         else
-            console.log("Error: adding reaction to list");
+            GLOBAL.print("Error: adding reaction to list");
     }
     /**
      * Clears the reaction list and reset it
      */
-    clearReactionList()
+    clearJoinReactionList()
     {
-        this.reactants.forEach(m => {
-            this.reactionList.set(m.name, 0);
+        this.joinReactants.forEach(m => {
+            this.joinReactionList.set(m.name, 0);
         });
-        console.log("clear reaction list");
+        this.xrScene.joinPanel.ClearText("joinHeader")
+        MoleculeManager.joinCounter = 0
+        GLOBAL.print("clear reaction list");
     }
 
     /**
@@ -60,10 +83,10 @@ export class MoleculeManager
      * @param   m
      *          The reactant molecule obj
      */
-    pushReactants( m : Molecule)
+    pushJoinReactants( m : Molecule)
     {   
-        this.reactants.push(m);
-        this.reactionList.set(m.name,0);
+        this.joinReactants.push(m);
+        this.joinReactionList.set(m.name,0);
     }
 
     /**
@@ -73,11 +96,11 @@ export class MoleculeManager
      * @returns 
      *          The master molecule object in the reactant list
      */
-    findReactants( id : number) : Nullable<Molecule>
+    findJoinReactants( id : number) : Nullable<Molecule>
     {
-        for(let m of this.reactants)
+        for(let m of this.joinReactants)
         {   
-            //console.log("finding id:" + id.toString());
+            //GLOBAL.print("finding id:" + id.toString());
         
             if(m.uniqueIds.indexOf(id) !== -1)
             {
@@ -92,9 +115,9 @@ export class MoleculeManager
      * @param   m
      *          The reactant molecule obj
      */
-    pushResult( m : Molecule)
+    pushJoinResult( m : Molecule)
     {
-        this.result.push(m);
+        this.joinResult.push(m);
     }
 
     /**
@@ -103,29 +126,29 @@ export class MoleculeManager
      *          The resulting molecule object from the reaction,
      *          null is return if the process fails.
      */
-    getResult() : Nullable<Molecule>
+    getJoinResult() : Nullable<Molecule>
     {   
         var m : Nullable<Molecule> = null;
-        const cc = this.reactionList.get("C");
-        const o2c = this.reactionList.get("O2");
-        const h2c = this.reactionList.get("H2");
+        const cc = this.joinReactionList.get("C");
+        const o2c = this.joinReactionList.get("O2");
+        const h2c = this.joinReactionList.get("H2");
         // if(cc !== undefined)
-        //     console.log("C:" + cc.toString());
+        //     GLOBAL.print("C:" + cc.toString());
         // if(o2c !== undefined)
-        //     console.log("O2:" + o2c.toString());
+        //     GLOBAL.print("O2:" + o2c.toString());
         // if(h2c !== undefined)
-        //     console.log("H2:" + h2c.toString());
+        //     GLOBAL.print("H2:" + h2c.toString());
 
         //CO2
-        if(cc !== undefined && cc == 1 && o2c !== undefined && o2c == 1)
-            m = this.result[0];
+        if(cc !== undefined && cc == 1 && o2c !== undefined && o2c == 1 && (h2c === undefined || h2c === 0))
+            m = this.joinResult[0];
         //C6H6
-        else if(cc !== undefined && cc == 6 && h2c !== undefined && h2c == 3)
-            m = this.result[1];
+        else if(cc !== undefined && cc == 6 && h2c !== undefined && h2c == 3 && (o2c === undefined || o2c === 0) )
+            m = this.joinResult[1];
         
         //reaction success clear the reaction list
         if(m != null)
-            this.clearReactionList();
+            this.clearJoinReactionList();
 
         return m;
     }
