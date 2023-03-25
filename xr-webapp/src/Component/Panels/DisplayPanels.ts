@@ -40,10 +40,25 @@ export class DisplayPanel extends TransformNode
         outlineWidth?: number, fontFamily?: string, fontSize?: number, wordWarp?: boolean,
     },)
     {
+        const tempPos = textOptions.position
+        textOptions.position = Vector3.Zero()
         const textString = new TextString(id + "panelText" + DisplayPanel.idCounter++, textOptions)
-        textString.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
-        textString.scaling = this.scaling
-        textString.textPlane.setParent(this);
+
+        const restoreDPpos = this.position
+        const restoreDPscale = this.scaling
+        const restoreDProtation = this.rotationQuaternion
+
+        this.position = Vector3.Zero()
+        this.scaling = Vector3.One()
+        this.rotation = Vector3.Zero()
+
+        textString.setParent(this);
+        textString.position = tempPos
+
+        this.position = restoreDPpos
+        this.scaling = restoreDPscale
+        this.rotation =  restoreDProtation.toEulerAngles()
+
         this.textStrings.push(textString)
     }
 
