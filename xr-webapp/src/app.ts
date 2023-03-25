@@ -48,7 +48,7 @@ export class App {
 
   enableInspector(scene: Scene) {
     window.addEventListener("keydown", (e) => {
-      if (e.metaKey && e.shiftKey && e.key === "i") {
+      if (e.ctrlKey && e.key === "i") {
         if (scene.debugLayer.isVisible()) {
           scene.debugLayer.hide();
         } else {
