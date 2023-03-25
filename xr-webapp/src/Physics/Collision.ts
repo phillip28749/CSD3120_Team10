@@ -114,6 +114,8 @@ export class Collision {
     //reaction zone trigger update
     if (!xrScene.pickedMesh) return;
     if (xrScene.pickedMesh.intersectsMesh(xrScene.joinReactionZone.mesh, false, true)) {
+      xrScene.joinPanel.DeleteContainText("RESULT")
+
       // reaction trigger logic
       GLOBAL.print("Meshes intersecting!");
       xrScene.moleculeMg.addJoinReactionToList(xrScene.moleculeMg.currSelected);

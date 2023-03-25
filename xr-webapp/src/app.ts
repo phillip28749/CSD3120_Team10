@@ -64,8 +64,8 @@ export class App {
    */
   update() {
     this.xrScene.xrPromise.then((xr) => {
-      //Collision.JoinMolecules(this.xrScene);
-      Collision.BreakMolecules(this.xrScene);
+      Collision.JoinMolecules(this.xrScene);
+      //Collision.BreakMolecules(this.xrScene);
     });
   }
 

@@ -4,6 +4,7 @@ import {
   ExecuteCodeAction,
   Mesh,
   MeshBuilder,
+  Nullable,
   Scene,
   Space,
   StandardMaterial,
@@ -69,7 +70,7 @@ export class DisplayPanel extends TransformNode {
       wordWarp?: boolean;
     }
   ) {
-    const tempPos = textOptions.position;
+    const tempPos = textOptions?.position?? Vector3.Zero();
     textOptions.position = Vector3.Zero();
     const textString = new TextString(
       id + "panelText" + DisplayPanel.idCounter++,
@@ -116,7 +117,7 @@ export class DisplayPanel extends TransformNode {
       if (tempIndex !== -1) {
         searchId = tempText.textPlane.id.substring(0, tempIndex);
       }
-      GLOBAL.print("searchId " + searchId);
+      //GLOBAL.print("searchId " + searchId);
 
       if (
         excludedIds?.find((id) => {
@@ -129,5 +130,60 @@ export class DisplayPanel extends TransformNode {
     }
     
     this.textStrings = [...textStringList];
+  }
+
+  DeleteText(id: string) {
+    let index = this.textStrings.findIndex((textString) => 
+    {
+        let tempIndex = textString.textPlane.id.indexOf("panelText");
+        if (tempIndex !== -1) {
+           if(textString.textPlane.id.substring(0, tempIndex) === id)
+           {
+            textString.dispose();
+            return true
+           }
+        }
+        return false
+    })
+
+    if (index !== -1) {
+        this.textStrings.splice(index, 1);
+    }
+  }
+
+  DeleteContainText(text: string) {
+    let index = this.textStrings.findIndex((textString) => 
+    {
+        if(textString.textBlock.text.search(text) !== -1)
+        {
+            textString.dispose();
+            return true
+        }
+        return false
+    })
+
+    if (index !== -1) {
+        this.textStrings.splice(index, 1);
+    }
+  }
+
+  FindText(id: string) : Nullable<TextString>
+  {
+    let index = this.textStrings.findIndex((textString) => 
+    {
+        let tempIndex = textString.textPlane.id.indexOf("panelText");
+        if (tempIndex !== -1) {
+           if(textString.textPlane.id.substring(0, tempIndex) === id)
+           {
+            return true
+           }
+        }
+        return false
+    })
+
+    if (index !== -1) {
+        return this.textStrings[index]
+    }
+    return null
   }
 }

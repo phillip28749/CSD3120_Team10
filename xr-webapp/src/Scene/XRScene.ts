@@ -264,6 +264,8 @@ export class XRScene {
       let result = this.moleculeMg.getJoinResult();
       if (result != null) {
         GLOBAL.print("Reaction:" + result.name);
+        this.joinPanel.AddNewText(result.name + "result", { text: "RESULT: " + result.name, fontSize: 100, outlineWidth: 10, color: "green" })
+        
         const allResult = this.moleculeMg.getAllJoinResults();
         //disable all
         for (let r of allResult) r.mesh.setEnabled(false);
@@ -272,6 +274,10 @@ export class XRScene {
         this.pEvent.start();
         //enable only for selected for this reaction
         result.mesh.setEnabled(true);
+      }
+      else{
+        this.moleculeMg.clearJoinReactionList();
+        this.joinPanel.AddNewText("failResult", { text: "RESULT: FAILED!", fontSize: 100, outlineWidth: 10, color: "red" })
       }
     };
     this.joinBtn = new SceneButton(
@@ -378,16 +384,16 @@ export class XRScene {
   }
 
   CreateReactionUI() {
-    // this.joinReactionParent = new AbstractMesh("joinReactionParent");
-    // this.CreateJoinReactionZone();
-    // this.CreateJoinPanel();
-    // this.CreateJoinBtns();
-    // this.joinReactionParent.position = new Vector3(5.85, 0.83, -0.33);
+    this.joinReactionParent = new AbstractMesh("joinReactionParent");
+    this.CreateJoinReactionZone();
+    this.CreateJoinPanel();
+    this.CreateJoinBtns();
+    this.joinReactionParent.position = new Vector3(5.85, 0.83, -0.33);
     
-    this.breakReactionParent = new AbstractMesh("breakReactionParent");
-    this.CreateBreakReactionZone();
-    this.CreateBreakPanel();
-    this.CreateBreakBtns();
-    this.breakReactionParent.position = new Vector3(5.85, 0.83, -0.33);
+    // this.breakReactionParent = new AbstractMesh("breakReactionParent");
+    // this.CreateBreakReactionZone();
+    // this.CreateBreakPanel();
+    // this.CreateBreakBtns();
+    // this.breakReactionParent.position = new Vector3(5.85, 0.83, -0.33);
   }
 }
