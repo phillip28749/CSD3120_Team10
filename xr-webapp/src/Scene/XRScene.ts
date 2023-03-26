@@ -71,13 +71,18 @@ export class XRScene {
     this.scene = new Scene(engine);
     this.sceneCam = new SceneCamera(this.scene, this.canvas);
 
-    //Original Position
-    this.sceneCam.camera.position = new Vector3(0.9, 1.28, -0.07)
-    this.sceneCam.camera.target = new Vector3(1.45, 1.2, -0.09)
-
-    //Position of the table
-    //this.sceneCam.camera.position = new Vector3(4.61, 1.84, -0.14);
-    //this.sceneCam.camera.target = new Vector3(8.21, -0.13, -0.1);
+    if(GLOBAL.DEBUG_MODE)
+    {
+      //Position of the table
+      this.sceneCam.camera.position = new Vector3(4.61, 1.84, -0.14);
+      this.sceneCam.camera.target = new Vector3(8.21, -0.13, -0.1);
+    }
+    else
+    {
+      //Original Position
+      this.sceneCam.camera.position = new Vector3(0.9, 1.28, -0.07)
+      this.sceneCam.camera.target = new Vector3(1.45, 1.2, -0.09)
+    }
 
     this.LoadEnvironment();
     this.LoadMolecules();
