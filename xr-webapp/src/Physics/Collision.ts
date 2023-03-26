@@ -9,7 +9,7 @@ export class Collision {
       parentMesh: AbstractMesh
     ) => {
       // make sure we can only pick reactants
-      let m = xrScene.moleculeMg.findJoinReactants(pickedMesh.uniqueId);
+      let m = xrScene.moleculeMg.findMolecule(pickedMesh.uniqueId);
       if (m) {
         xrScene.pickedMesh = xrScene.moleculeMg.clone(m); //clone the master mesh
         xrScene.pickedMesh.setParent(parentMesh, true); //set under parent controller's mesh
@@ -112,8 +112,8 @@ export class Collision {
 
   static OnCollision(xrScene: XRScene)
   {
-    //Collision.JoinMolecules(xrScene);
-    Collision.BreakMolecules(xrScene);
+    Collision.JoinMolecules(xrScene);
+    //Collision.BreakMolecules(xrScene);
   }
 
   static JoinMolecules(xrScene: XRScene) {
@@ -124,7 +124,7 @@ export class Collision {
 
       // reaction trigger logic
       GLOBAL.print("Meshes intersecting!");
-      xrScene.moleculeMg.addJoinReactionToList(xrScene.moleculeMg.currSelected);
+      xrScene.moleculeMg.addJoinReactantToList(xrScene.moleculeMg.currSelected);
       xrScene.moleculeMg.currSelected = null;
       xrScene.pickedMesh.dispose();
       xrScene.pickedMesh = null;
@@ -137,7 +137,7 @@ export class Collision {
     if (xrScene.pickedMesh.intersectsMesh(xrScene.breakReactionZone.mesh, false, true)) {
       // reaction trigger logic
       GLOBAL.print("Meshes intersecting!");
-      xrScene.moleculeMg.addJoinReactionToList(xrScene.moleculeMg.currSelected);
+      xrScene.moleculeMg.addBreakReaction(xrScene.moleculeMg.currSelected);
       xrScene.moleculeMg.currSelected = null;
       xrScene.pickedMesh.dispose();
       xrScene.pickedMesh = null;

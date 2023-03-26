@@ -10,9 +10,13 @@ export class MoleculeManager {
   private xrScene: XRScene;
 
   currSelected: Nullable<Molecule>; // currently selected molecule
-  private joinReactants: Molecule[]; // the available reactants
-  private joinResult: Molecule[]; // the available results for reactions
-  private joinReactionList: Map<string, number>; // list molecule and its count in the reaction list
+  private reactants: Molecule[]; // the available reactants
+  private reactions: Molecule[]; // the available results for reactions
+  private moleculeList: Molecule[]; 
+
+  private joinReactantList: Map<string, number>; // list molecule and its count in the reaction list
+  private breakReactantList: Map<string, number>; 
+  private breakReaction: Molecule
 
   /**
    * Default constructs a molecule manager
@@ -21,13 +25,25 @@ export class MoleculeManager {
     this.xrScene = xrScene;
 
     this.currSelected = null;
-    this.joinReactants = [];
-    this.joinResult = [];
-    this.joinReactionList = new Map<string, number>();
+    this.reactants = [];
+    this.reactions = [];
+
+    this.joinReactantList = new Map<string, number>();
+    this.breakReactantList = new Map<string, number>();
+
+    this.breakReaction = null
   }
 
-  getAllJoinResults(): Molecule[] {
-    return this.joinResult;
+  getAllReactants(): Molecule[] {
+    return this.reactants;
+  }
+
+  getAllReactions(): Molecule[] {
+    return this.reactions;
+  }
+
+  getAllMolecules(): Molecule[] {
+    return this.moleculeList;
   }
 
   /**
@@ -36,7 +52,7 @@ export class MoleculeManager {
    *         The reactant molecule obj
    */
   private static joinCounter: number = 0;
-  addJoinReactionToList(m: Nullable<Molecule>) {
+  addJoinReactantToList(m: Nullable<Molecule>) {
     const numRows = 3;
     const numCols = 3;
     const numMol = numRows * numCols;
@@ -53,11 +69,11 @@ export class MoleculeManager {
       return;
     }
 
-    var count = this.joinReactionList.get(m.name);
+    var count = this.joinReactantList.get(m.name);
     if (count !== undefined) {
       ++count;
       GLOBAL.print("Add reaction name:" + m.name);
-      this.joinReactionList.set(m.name, count);
+      this.joinReactantList.set(m.name, count);
 
       //Add to display panel
       const rowNo = MoleculeManager.joinCounter % numRows;
@@ -75,26 +91,48 @@ export class MoleculeManager {
       });
     } else GLOBAL.print("Error: adding reaction to list");
   }
+
+  addBreakReaction(m: Nullable<Molecule>) {
+    GLOBAL.print("Add reaction name:" + m.name);
+    this.breakReaction = m
+  }
   /**
    * Clears the reaction list and reset it
    */
   clearJoinReactionList() {
-    this.joinReactants.forEach((m) => {
-      this.joinReactionList.set(m.name, 0);
+    this.reactants.forEach((m) => {
+      this.joinReactantList.set(m.name, 0);
     });
     this.xrScene.joinPanel.ClearText("joinHeader");
     MoleculeManager.joinCounter = 0;
     GLOBAL.print("clear reaction list");
   }
 
+  clearBreakReaction() {
+    this.breakReaction = null
+  }
+
+
   /**
    * Push a molecule to the list of available reactants
    * @param   m
    *          The reactant molecule obj
    */
-  pushJoinReactants(m: Molecule) {
-    this.joinReactants.push(m);
-    this.joinReactionList.set(m.name, 0);
+  pushReactants(m: Molecule) {
+    this.reactants.push(m);
+    this.moleculeList.push(m)
+    this.joinReactantList.set(m.name, 0);
+    this.breakReactantList.set(m.name, 0)
+  }
+
+  /**
+   * Push a molecule to the list of available result from reaction
+   * @param   m
+   *          The reactant molecule obj
+   */
+  pushReactions(m: Molecule) {
+    this.reactions.push(m);
+    this.moleculeList.push(m)
   }
 
   /**
@@ -104,8 +142,8 @@ export class MoleculeManager {
    * @returns
    *          The master molecule object in the reactant list
    */
-  findJoinReactants(id: number): Nullable<Molecule> {
-    for (let m of this.joinReactants) {
+  findMolecule(id: number): Nullable<Molecule> {
+    for (let m of this.moleculeList) {
       //GLOBAL.print("finding id:" + id.toString());
 
       if (m.uniqueIds.indexOf(id) !== -1) {
@@ -116,15 +154,6 @@ export class MoleculeManager {
   }
 
   /**
-   * Push a molecule to the list of available result from reaction
-   * @param   m
-   *          The reactant molecule obj
-   */
-  pushJoinResult(m: Molecule) {
-    this.joinResult.push(m);
-  }
-
-  /**
    * Gets the result from the reaction
    * @returns
    *          The resulting molecule object from the reaction,
@@ -132,9 +161,9 @@ export class MoleculeManager {
    */
   getJoinResult(): Nullable<Molecule> {
     var m: Nullable<Molecule> = null;
-    const cc = this.joinReactionList.get("C");
-    const o2c = this.joinReactionList.get("O2");
-    const h2c = this.joinReactionList.get("H2");
+    const cc = this.joinReactantList.get("C");
+    const o2c = this.joinReactantList.get("O2");
+    const h2c = this.joinReactantList.get("H2");
     // if(cc !== undefined)
     //     GLOBAL.print("C:" + cc.toString());
     // if(o2c !== undefined)
@@ -150,7 +179,7 @@ export class MoleculeManager {
       o2c == 1 &&
       (h2c === undefined || h2c === 0)
     )
-      m = this.joinResult[0];
+      m = this.reactions[0];
     //C6H6
     else if (
       cc !== undefined &&
@@ -159,7 +188,7 @@ export class MoleculeManager {
       h2c == 3 &&
       (o2c === undefined || o2c === 0)
     )
-      m = this.joinResult[1];
+      m = this.reactions[1];
 
     //reaction success clear the reaction list
     if (m != null) this.clearJoinReactionList();
@@ -167,41 +196,78 @@ export class MoleculeManager {
     return m;
   }
 
-  getBreakResult(): Nullable<Molecule> {
-    var m: Nullable<Molecule> = null;
-    const cc = this.joinReactionList.get("C");
-    const o2c = this.joinReactionList.get("O2");
-    const h2c = this.joinReactionList.get("H2");
-    // if(cc !== undefined)
-    //     GLOBAL.print("C:" + cc.toString());
-    // if(o2c !== undefined)
-    //     GLOBAL.print("O2:" + o2c.toString());
-    // if(h2c !== undefined)
-    //     GLOBAL.print("H2:" + h2c.toString());
+  getBreakResult(): Molecule[] {
+    const isAlphabet = (char: string): boolean => /[a-zA-Z]/.test(char);
 
-    //CO2
-    if (
-      cc !== undefined &&
-      cc == 1 &&
-      o2c !== undefined &&
-      o2c == 1 &&
-      (h2c === undefined || h2c === 0)
-    )
-      m = this.joinResult[0];
-    //C6H6
-    else if (
-      cc !== undefined &&
-      cc == 6 &&
-      h2c !== undefined &&
-      h2c == 3 &&
-      (o2c === undefined || o2c === 0)
-    )
-      m = this.joinResult[1];
+    var result : Molecule[] = []
+    if(this.breakReaction !== null)
+    {//Finding out which molecule/atom to break up into
+      const labelText = this.breakReaction.label.textBlock.text
 
-    //reaction success clear the reaction list
-    if (m != null) this.clearJoinReactionList();
+      //e.g. CO2
+      for (let i = 0; i < labelText.length-1;) 
+      {
+        if(isAlphabet(labelText[i]))
+        {//e.g. CO2 -> C
+          if(isAlphabet(labelText[i+1]))
+          {//e.g. CO2 -> CO (O is an alphabet)
+            //This situation will only happen for "C"
+            this.breakReactantList.set(labelText[i], 0)
+          }
+          else
+          {//e.g. C6H6 -> C6 (6 is a number)
+            if(labelText[i] === "C")
+            {
+              this.breakReactantList.set(labelText[i], parseInt(labelText[i+1]))
+            }
+            else
+            {//For O2 and H2
+              this.breakReactantList.set(labelText[i] + "2", parseInt(labelText[i+1])/2)
+            }
+          }
+        }
+      }
 
-    return m;
+      const cc = this.breakReactantList.get("C");
+      const o2c = this.breakReactantList.get("O2");
+      const h2c = this.breakReactantList.get("H2");
+
+      this.reactants.forEach((m) => {
+        var size : number = 0;
+
+        switch(m.name)
+        {
+          case "C":
+          {
+            size = cc
+            break;
+          }
+          case "O2":
+          {
+            size = o2c
+            break
+          }
+          case "H2":
+          {
+            size = h2c
+            break
+          }
+        }
+
+        for(var i = 0; i < size; ++i)
+        {
+          result.push(m)
+        }
+      });
+
+      //Clearing the list
+      this.reactants.forEach((m) => {
+        this.breakReactantList.set(m.name, 0);
+      });
+
+    }
+    
+    return result;
   }
 
   /**

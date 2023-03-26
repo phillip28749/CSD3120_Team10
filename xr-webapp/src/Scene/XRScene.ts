@@ -194,7 +194,7 @@ export class XRScene {
               m.uniqueIds.push(child.uniqueId);
             });
             //add the molecule to the manager as master molecule object
-            this.moleculeMg.pushJoinReactants(m);
+            this.moleculeMg.pushReactants(m);
           }
         });
       });
@@ -212,7 +212,7 @@ export class XRScene {
 
             //text
             m.label = new MoleculeLabel(moleculeName, new Vector3(0, 1, 0), {
-              text: "Result:" + moleculeName,
+              text: moleculeName,
             });
             m.label.plane.setParent(m.mesh);
 
@@ -231,7 +231,7 @@ export class XRScene {
               m.uniqueIds.push(child.uniqueId);
             });
             mesh.setEnabled(false);
-            this.moleculeMg.pushJoinResult(m);
+            this.moleculeMg.pushReactions(m);
           }
         });
       });
@@ -266,10 +266,10 @@ export class XRScene {
         GLOBAL.print("Reaction:" + result.name);
         this.joinPanel.AddNewText(result.name + "result", { text: "RESULT: " + result.name, fontSize: 100, outlineWidth: 10, color: "green" })
         
-        const allResult = this.moleculeMg.getAllJoinResults();
+        const allResult = this.moleculeMg.getAllReactions();
         //disable all
         for (let r of allResult) r.mesh.setEnabled(false);
-
+        
         // start the particle system effect
         this.pEvent.start();
         //enable only for selected for this reaction
@@ -338,7 +338,7 @@ export class XRScene {
       let result = this.moleculeMg.getJoinResult();
       if (result != null) {
         GLOBAL.print("Reaction:" + result.name);
-        const allResult = this.moleculeMg.getAllJoinResults();
+        const allResult = this.moleculeMg.getAllReactions();
         //disable all
         for (let r of allResult) r.mesh.setEnabled(false);
 
@@ -380,20 +380,20 @@ export class XRScene {
     this.breakPanel.scaling.setAll(0.3);
     this.breakPanel.setParent(this.breakReactionParent);
 
-    this.breakPanel.AddNewText("breakHeader", { text: "REACTION LIST", fontSize: 100, outlineWidth: 10, position: new Vector3(0.0, 0.6, 0) })
+    this.breakPanel.AddNewText("breakHeader", { text: "CHECK REACTION", fontSize: 100, outlineWidth: 10, position: new Vector3(0.0, 0.6, 0) })
   }
 
   CreateReactionUI() {
-    // this.joinReactionParent = new AbstractMesh("joinReactionParent");
-    // this.CreateJoinReactionZone();
-    // this.CreateJoinPanel();
-    // this.CreateJoinBtns();
-    // this.joinReactionParent.position = new Vector3(5.85, 0.83, -0.33);
+    this.joinReactionParent = new AbstractMesh("joinReactionParent");
+    this.CreateJoinReactionZone();
+    this.CreateJoinPanel();
+    this.CreateJoinBtns();
+    this.joinReactionParent.position = new Vector3(5.85, 0.83, -0.33);
     
-    this.breakReactionParent = new AbstractMesh("breakReactionParent");
-    this.CreateBreakReactionZone();
-    this.CreateBreakPanel();
-    this.CreateBreakBtns();
-    this.breakReactionParent.position = new Vector3(5.85, 0.83, -0.33);
+    // this.breakReactionParent = new AbstractMesh("breakReactionParent");
+    // this.CreateBreakReactionZone();
+    // this.CreateBreakPanel();
+    // this.CreateBreakBtns();
+    // this.breakReactionParent.position = new Vector3(5.85, 0.83, -0.33);
   }
 }

@@ -51,7 +51,7 @@ export class SceneButton extends TransformNode
         borderPlane.position = this.btnPlane.position.clone();
         borderPlane.position.z += 0.001;
         var borderMat = new StandardMaterial("borderMat", scene);
-        borderMat.diffuseColor = buttonOptions?.borderColor ?? Color3.Black();
+        borderMat.diffuseColor = buttonOptions?.borderColor ?? Color3.Gray();
         borderPlane.material = borderMat;
         borderPlane.setParent( this.btnPlane);
 
