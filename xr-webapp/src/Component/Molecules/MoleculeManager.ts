@@ -27,6 +27,7 @@ export class MoleculeManager {
     this.currSelected = null;
     this.reactants = [];
     this.reactions = [];
+    this.moleculeList = []
 
     this.joinReactantList = new Map<string, number>();
     this.breakReactantList = new Map<string, number>();
