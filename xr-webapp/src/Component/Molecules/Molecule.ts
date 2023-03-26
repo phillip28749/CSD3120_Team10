@@ -17,13 +17,5 @@ export class Molecule {
     this.mesh = mesh;
     this.name = name;
     this.uniqueIds = [];
-
-    if(GLOBAL.DEBUG_MODE)
-    {
-      // var pointerDragBehavior = new PointerDragBehavior({dragPlaneNormal: Vector3.Up()});
-      // pointerDragBehavior.useObjectOrientationForDragging = false;
-      
-      // this.mesh.addBehavior(pointerDragBehavior);
-    }
   }
 }

@@ -3,6 +3,12 @@ import { GLOBAL } from "../../Global";
 import { XRScene } from "../../Scene/XRScene";
 import { Molecule } from "./Molecule";
 
+export enum MoleculeInZone {
+  Reactant,
+  Reaction,
+  None,
+}
+
 /**
  * A manager class for molecules to perform molecule logic and holds data relating to molecules
  */
@@ -12,11 +18,10 @@ export class MoleculeManager {
   currSelected: Nullable<Molecule>; // currently selected molecule
   private reactants: Molecule[]; // the available reactants
   private reactions: Molecule[]; // the available results for reactions
-  private moleculeList: Molecule[]; 
+  private moleculeList: Molecule[];
 
-  private joinReactantList: Map<string, number>; // list molecule and its count in the reaction list
-  private breakReactantList: Map<string, number>; 
-  private breakReaction: Molecule
+  molInZone: MoleculeInZone;
+  private reactList: Map<string, number>; // list molecule and its count in the reaction list
 
   /**
    * Default constructs a molecule manager
@@ -27,12 +32,10 @@ export class MoleculeManager {
     this.currSelected = null;
     this.reactants = [];
     this.reactions = [];
-    this.moleculeList = []
+    this.moleculeList = [];
 
-    this.joinReactantList = new Map<string, number>();
-    this.breakReactantList = new Map<string, number>();
-
-    this.breakReaction = null
+    this.molInZone = MoleculeInZone.None;
+    this.reactList = new Map<string, number>();
   }
 
   getAllReactants(): Molecule[] {
@@ -52,67 +55,108 @@ export class MoleculeManager {
    * @param  m
    *         The reactant molecule obj
    */
-  private static joinCounter: number = 0;
-  addJoinReactantToList(m: Nullable<Molecule>) {
-    const numRows = 3;
-    const numCols = 3;
-    const numMol = numRows * numCols;
+  private static molCounter: number = 0;
+  addMoleculeToList(m: Nullable<Molecule>) {
+    //Check the type of molecule added to the zone
+    var addingMol = MoleculeInZone.None;
+    for (let i = 0; i < this.reactants.length; ++i) {
+      if (this.reactants[i].label.textBlock.text === m.name) {
+        addingMol = MoleculeInZone.Reactant;
+        break;
+      }
+    }
+    if (addingMol === MoleculeInZone.None) {
+      for (let i = 0; i < this.reactants.length; ++i) {
+        if (this.reactions[i].label.textBlock.text === m.name) {
+          addingMol = MoleculeInZone.Reaction;
+          break;
+        }
+      }
+    }
+    if (addingMol === MoleculeInZone.None) return;
 
-    if (MoleculeManager.joinCounter >= numMol) {
-      if (this.xrScene.joinPanel.FindText("noMoreAdding") === null)
-        this.xrScene.joinPanel.AddNewText("noMoreAdding", {
-          text: "MAX MOLECULES REACHED!",
-          fontSize: 70,
-          outlineWidth: 7,
-          position: new Vector3(0, -0.5, 0),
-          color: "red",
-        });
-      return;
+    //Reset React list
+    if (addingMol !== this.molInZone) {
+      this.ResetReactList();
+      this.molInZone = addingMol;
     }
 
-    var count = this.joinReactantList.get(m.name);
+    var count = this.reactList.get(m.name);
     if (count !== undefined) {
       ++count;
-      GLOBAL.print("Add reaction name:" + m.name);
-      this.joinReactantList.set(m.name, count);
 
-      //Add to display panel
-      const rowNo = MoleculeManager.joinCounter % numRows;
-      const colNo = Math.floor(MoleculeManager.joinCounter / numRows);
+      if (addingMol === MoleculeInZone.Reactant) {
+        GLOBAL.print("Add reactant name:" + m.name);
+        this.reactList.set(m.name, count);
 
-      MoleculeManager.joinCounter++;
+        //Adding reactant to list
+        const numRows = 3;
+        const numCols = 3;
+        const numMol = numRows * numCols;
 
-      const textPos = new Vector3(-0.4 + colNo * 0.4, 0.3 + rowNo * -0.3, 0);
-      this.xrScene.joinPanel.AddNewText(m.name + count, {
-        text: m.name,
-        fontSize: 90,
-        outlineWidth: 9,
-        position: textPos,
-        color: "grey",
-      });
-    } else GLOBAL.print("Error: adding reaction to list");
+        //Check to see if molecules added exceed the limit allowed on display panel
+        if (MoleculeManager.molCounter >= numMol) {
+          if (this.xrScene.reactionPanel.FindText("noMoreAdding") === null)
+            this.xrScene.reactionPanel.AddNewText("noMoreAdding", {
+              text: "MAX MOLECULES REACHED!",
+              fontSize: 70,
+              outlineWidth: 7,
+              position: new Vector3(0, -0.5, 0),
+              color: "red",
+            });
+          return;
+        }
+
+        //Add to display panel
+        const rowNo = MoleculeManager.molCounter % numRows;
+        const colNo = Math.floor(MoleculeManager.molCounter / numRows);
+        MoleculeManager.molCounter++;
+
+        const textPos = new Vector3(-0.4 + colNo * 0.4, 0.3 + rowNo * -0.3, 0);
+        this.xrScene.reactionPanel.AddNewText(m.name + count, {
+          text: m.name,
+          fontSize: 90,
+          outlineWidth: 9,
+          position: textPos,
+          color: "grey",
+        });
+      } else 
+      {//Adding reaction to list
+        //Can only have 1 reaction in the list
+        this.ResetReactList();
+        this.molInZone = MoleculeInZone.Reaction
+
+        GLOBAL.print("Add reaction name:" + m.name);
+        this.reactList.set(m.name, count);
+        //Add to display panel
+        this.xrScene.reactionPanel.AddNewText(m.name + count, {
+          text: m.name,
+          fontSize: 90,
+          outlineWidth: 9,
+          position: Vector3.Zero(),
+          color: "grey",
+        });
+      }
+    } else GLOBAL.print("Error: adding molecule to react list");
   }
 
-  addBreakReaction(m: Nullable<Molecule>) {
-    GLOBAL.print("Add reaction name:" + m.name);
-    this.breakReaction = m
-  }
   /**
    * Clears the reaction list and reset it
    */
-  clearJoinReactionList() {
-    this.reactants.forEach((m) => {
-      this.joinReactantList.set(m.name, 0);
+  ResetReactList() {
+    this.ClearReactList();
+    this.xrScene.reactionPanel.ClearText("reactionHeader");
+    this.xrScene.reactionPanel.ClearMolecules();
+  }
+
+  ClearReactList() {
+    this.moleculeList.forEach((m) => {
+      this.reactList.set(m.name, 0);
     });
-    this.xrScene.joinPanel.ClearText("joinHeader");
-    MoleculeManager.joinCounter = 0;
+    MoleculeManager.molCounter = 0;
+    this.molInZone = MoleculeInZone.None
     GLOBAL.print("clear reaction list");
   }
-
-  clearBreakReaction() {
-    this.breakReaction = null
-  }
-
 
   /**
    * Push a molecule to the list of available reactants
@@ -121,9 +165,8 @@ export class MoleculeManager {
    */
   pushReactants(m: Molecule) {
     this.reactants.push(m);
-    this.moleculeList.push(m)
-    this.joinReactantList.set(m.name, 0);
-    this.breakReactantList.set(m.name, 0)
+    this.moleculeList.push(m);
+    this.reactList.set(m.name, 0);
   }
 
   /**
@@ -133,7 +176,8 @@ export class MoleculeManager {
    */
   pushReactions(m: Molecule) {
     this.reactions.push(m);
-    this.moleculeList.push(m)
+    this.moleculeList.push(m);
+    this.reactList.set(m.name, 0);
   }
 
   /**
@@ -162,9 +206,9 @@ export class MoleculeManager {
    */
   getJoinResult(): Nullable<Molecule> {
     var m: Nullable<Molecule> = null;
-    const cc = this.joinReactantList.get("C");
-    const o2c = this.joinReactantList.get("O2");
-    const h2c = this.joinReactantList.get("H2");
+    const cc = this.reactList.get("C");
+    const o2c = this.reactList.get("O2");
+    const h2c = this.reactList.get("H2");
     // if(cc !== undefined)
     //     GLOBAL.print("C:" + cc.toString());
     // if(o2c !== undefined)
@@ -192,7 +236,7 @@ export class MoleculeManager {
       m = this.reactions[1];
 
     //reaction success clear the reaction list
-    if (m != null) this.clearJoinReactionList();
+    if (m != null) this.ResetReactList();
 
     return m;
   }
@@ -200,74 +244,79 @@ export class MoleculeManager {
   getBreakResult(): Molecule[] {
     const isAlphabet = (char: string): boolean => /[a-zA-Z]/.test(char);
 
-    var result : Molecule[] = []
-    if(this.breakReaction !== null)
-    {//Finding out which molecule/atom to break up into
-      const labelText = this.breakReaction.label.textBlock.text
+    var labelText : Nullable<string> = null;
+    if(this.reactList.get("CO2"))
+    {
+      labelText = "CO2"
+    }
+    else
+    {
+      labelText = "C6H6"
+    }
 
+    var result: Molecule[] = [];
+    if (labelText !== null) 
+    {//Finding out which molecule/atom to break up into
+      var breakReactionList = new Map<string, number>();
       //e.g. CO2
-      for (let i = 0; i < labelText.length-1;) 
-      {
-        if(isAlphabet(labelText[i]))
-        {//e.g. CO2 -> C
-          if(isAlphabet(labelText[i+1]))
-          {//e.g. CO2 -> CO (O is an alphabet)
+      for (let i = 0; i < labelText.length - 1; ) {
+        if (isAlphabet(labelText[i])) {
+          //e.g. CO2 -> C
+          if (isAlphabet(labelText[i + 1])) {
+            //e.g. CO2 -> CO (O is an alphabet)
             //This situation will only happen for "C"
-            this.breakReactantList.set(labelText[i], 0)
-          }
-          else
-          {//e.g. C6H6 -> C6 (6 is a number)
-            if(labelText[i] === "C")
-            {
-              this.breakReactantList.set(labelText[i], parseInt(labelText[i+1]))
+            breakReactionList.set(labelText[i], 1);
+            i++;
+          } else {
+            //e.g. C6H6 -> C6 (6 is a number)
+            if (labelText[i] === "C") {
+              breakReactionList.set(
+                labelText[i],
+                parseInt(labelText[i + 1])
+              );
+            } else {
+              //For O2 and H2
+              breakReactionList.set(
+                labelText[i] + "2",
+                parseInt(labelText[i + 1]) / 2
+              );
             }
-            else
-            {//For O2 and H2
-              this.breakReactantList.set(labelText[i] + "2", parseInt(labelText[i+1])/2)
-            }
+            i+=2;
           }
         }
       }
 
-      const cc = this.breakReactantList.get("C");
-      const o2c = this.breakReactantList.get("O2");
-      const h2c = this.breakReactantList.get("H2");
+      const cc = breakReactionList.get("C");
+      const o2c = breakReactionList.get("O2");
+      const h2c = breakReactionList.get("H2");
 
+      GLOBAL.print("cc " + cc)
+      GLOBAL.print("o2c " + o2c)
+      GLOBAL.print("h2c " + h2c)
       this.reactants.forEach((m) => {
-        var size : number = 0;
+        var size: number = 0;
 
-        switch(m.name)
-        {
-          case "C":
-          {
-            size = cc
+        switch (m.name) {
+          case "C": {
+            size = cc;
             break;
           }
-          case "O2":
-          {
-            size = o2c
-            break
+          case "O2": {
+            size = o2c;
+            break;
           }
-          case "H2":
-          {
-            size = h2c
-            break
+          case "H2": {
+            size = h2c;
+            break;
           }
         }
 
-        for(var i = 0; i < size; ++i)
-        {
-          result.push(m)
+        for (var i = 0; i < size; ++i) {
+          result.push(m);
         }
       });
-
-      //Clearing the list
-      this.reactants.forEach((m) => {
-        this.breakReactantList.set(m.name, 0);
-      });
-
     }
-    
+
     return result;
   }
 
@@ -278,7 +327,14 @@ export class MoleculeManager {
    * @returns
    *          The cloned molecule's mesh
    */
-  clone(m: Molecule): Nullable<AbstractMesh> {
+  cloneMesh(m: Molecule): Nullable<AbstractMesh> {
     return m.mesh.clone(m.mesh.name + "_clone", null);
+  }
+
+  cloneMolecule(m: Molecule): Nullable<Molecule> {
+    return new Molecule(
+      m.name + "_clone",
+      m.mesh.clone(m.mesh.name + "_clone", null)
+    );
   }
 }

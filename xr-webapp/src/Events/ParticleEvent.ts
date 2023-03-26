@@ -26,7 +26,9 @@ export class ParticleEvent
         particleSystem.particleTexture = new Texture("textures/flare.png", scene);
 
         // the starting location
-        particleSystem.emitter = new Vector3(5.65, 0.88, 0.2); 
+        // particleSystem.emitter = new Vector3(5.65, 0.88, 0.2); 
+        particleSystem.emitter = new Vector3(5.85, 0.83, -0.33); 
+        particleSystem.emitter = particleSystem.emitter.add(new Vector3(0.2, 0.2, 0.27))
 
         particleSystem.color1 = new Color4(0.7, 0.8, 1.0, 1.0);
         particleSystem.color2 = new Color4(0.2, 0.5, 1.0, 1.0);

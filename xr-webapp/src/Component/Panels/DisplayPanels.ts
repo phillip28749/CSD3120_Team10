@@ -13,6 +13,8 @@ import {
 } from "babylonjs";
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui";
 import { GLOBAL } from "../../Global";
+import { Molecule } from "../Molecules/Molecule";
+import { MoleculeManager } from "../Molecules/MoleculeManager";
 import { TextString } from "../Text/TextString";
 
 export class DisplayPanel extends TransformNode {
@@ -21,6 +23,7 @@ export class DisplayPanel extends TransformNode {
   panelMat: StandardMaterial;
 
   textStrings: TextString[];
+  moleculeList: Molecule[];
 
   constructor(
     id: string,
@@ -37,6 +40,9 @@ export class DisplayPanel extends TransformNode {
 
     //list of texts
     this.textStrings = [];
+
+    //list of molecules
+    this.moleculeList = [];
 
     //plane background
     this.panelMat = new StandardMaterial("panelMat", scene);
@@ -70,7 +76,7 @@ export class DisplayPanel extends TransformNode {
       wordWarp?: boolean;
     }
   ) {
-    const tempPos = textOptions?.position?? Vector3.Zero();
+    const tempPos = textOptions?.position ?? Vector3.Zero();
     textOptions.position = Vector3.Zero();
     const textString = new TextString(
       id + "panelText" + DisplayPanel.idCounter++,
@@ -106,8 +112,8 @@ export class DisplayPanel extends TransformNode {
   }
 
   ClearText(...excludedIds: string[]) {
-    var textStringList : TextString[]
-    textStringList = []
+    var textStringList: TextString[];
+    textStringList = [];
 
     while (this.textStrings.length > 0) {
       const tempText = this.textStrings.pop();
@@ -128,62 +134,97 @@ export class DisplayPanel extends TransformNode {
         textStringList.push(tempText);
       } else tempText.dispose();
     }
-    
+
     this.textStrings = [...textStringList];
   }
 
   DeleteText(id: string) {
-    let index = this.textStrings.findIndex((textString) => 
-    {
-        let tempIndex = textString.textPlane.id.indexOf("panelText");
-        if (tempIndex !== -1) {
-           if(textString.textPlane.id.substring(0, tempIndex) === id)
-           {
-            textString.dispose();
-            return true
-           }
+    let index = this.textStrings.findIndex((textString) => {
+      let tempIndex = textString.textPlane.id.indexOf("panelText");
+      if (tempIndex !== -1) {
+        if (textString.textPlane.id.substring(0, tempIndex) === id) {
+          textString.dispose();
+          return true;
         }
-        return false
-    })
+      }
+      return false;
+    });
 
     if (index !== -1) {
-        this.textStrings.splice(index, 1);
+      this.textStrings.splice(index, 1);
     }
   }
 
   DeleteContainText(text: string) {
-    let index = this.textStrings.findIndex((textString) => 
-    {
-        if(textString.textBlock.text.search(text) !== -1)
-        {
-            textString.dispose();
-            return true
-        }
-        return false
-    })
+    let index = this.textStrings.findIndex((textString) => {
+      if (textString.textBlock.text.search(text) !== -1) {
+        textString.dispose();
+        return true;
+      }
+      return false;
+    });
 
     if (index !== -1) {
-        this.textStrings.splice(index, 1);
+      this.textStrings.splice(index, 1);
     }
   }
 
-  FindText(id: string) : Nullable<TextString>
-  {
-    let index = this.textStrings.findIndex((textString) => 
-    {
-        let tempIndex = textString.textPlane.id.indexOf("panelText");
-        if (tempIndex !== -1) {
-           if(textString.textPlane.id.substring(0, tempIndex) === id)
-           {
-            return true
-           }
+  FindText(id: string): Nullable<TextString> {
+    let index = this.textStrings.findIndex((textString) => {
+      let tempIndex = textString.textPlane.id.indexOf("panelText");
+      if (tempIndex !== -1) {
+        if (textString.textPlane.id.substring(0, tempIndex) === id) {
+          return true;
         }
-        return false
-    })
+      }
+      return false;
+    });
 
     if (index !== -1) {
-        return this.textStrings[index]
+      return this.textStrings[index];
     }
-    return null
+    return null;
+  }
+
+  AddNewMolecule(
+    name: string,
+    moleculeMg: MoleculeManager,
+    position?: Vector3
+  ) {
+    moleculeMg.getAllMolecules().forEach((m) => {
+      if (name === m.label.textBlock.text) {
+        var cloneMol = moleculeMg.cloneMolecule(m);
+
+        const restoreDPpos = this.position;
+        const restoreDPscale = this.scaling;
+        const restoreDProtation = this.rotationQuaternion;
+    
+        this.position = Vector3.Zero();
+        this.scaling = Vector3.One();
+        this.rotation = Vector3.Zero();
+    
+        cloneMol.mesh.setParent(this);
+        cloneMol.mesh.position = position ?? Vector3.Zero();
+        cloneMol.mesh.scaling.setAll(0.3)
+        cloneMol.mesh.rotate(Vector3.Down(), Math.PI * 0.5, Space.LOCAL);
+        cloneMol.mesh.rotate(Vector3.Backward(), Math.PI * 0.5, Space.LOCAL);
+    
+        this.position = restoreDPpos;
+        this.scaling = restoreDPscale;
+        this.rotation = restoreDProtation?.toEulerAngles() ?? Vector3.Zero();
+        this.rotationQuaternion = restoreDProtation;
+    
+        this.moleculeList.push(cloneMol);
+        return;
+      }
+    });
+  }
+
+  ClearMolecules() 
+  {
+    while (this.moleculeList.length > 0) {
+      const tempMol = this.moleculeList.pop();
+      tempMol.mesh.dispose()
+    }
   }
 }

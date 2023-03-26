@@ -64,7 +64,7 @@ export class App {
    */
   update() {
     this.xrScene.xrPromise.then((xr) => {
-      Collision.OnCollision(this.xrScene)
+      this.xrScene.OnUpdate();
     });
   }
 
