@@ -110,6 +110,12 @@ export class Collision {
     });
   }
 
+  static OnCollision(xrScene: XRScene)
+  {
+    //Collision.JoinMolecules(xrScene);
+    Collision.BreakMolecules(xrScene);
+  }
+
   static JoinMolecules(xrScene: XRScene) {
     //reaction zone trigger update
     if (!xrScene.pickedMesh) return;

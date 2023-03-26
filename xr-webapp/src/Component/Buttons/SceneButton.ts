@@ -1,5 +1,6 @@
 import { ActionManager, Color3, ExecuteCodeAction, Mesh, MeshBuilder, Scene, Space, StandardMaterial, TransformNode, Vector3 } from "babylonjs";
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui";
+import { GLOBAL } from "../../Global";
 import { TextString } from "../Text/TextString";
 
 type TriggerAction = () => void;
@@ -17,8 +18,12 @@ export class SceneButton extends TransformNode
         textOptions?: { position?: Vector3, text?: string, color?: string, outlineColor?: string, 
             outlineWidth?: number, fontFamily?: string, fontSize?: number, wordWarp?: boolean,
         },
-        buttonOptions?:{ emissiveColor?: Color3, width?: number, height?: number},){
+        buttonOptions?:{ emissiveColor?: Color3, width?: number, height?: number, borderThickness?: number, borderColor?: Color3},){
         super("PBtn")
+
+
+        const btnWidth = buttonOptions?.width?? 1.5
+        const btnHeight = buttonOptions?.height?? 1.5
 
         //plane btn background
         this.btnMat = new StandardMaterial("btnPlaneMat", scene);
@@ -26,12 +31,30 @@ export class SceneButton extends TransformNode
         this.btnMat.emissiveColor = buttonOptions?.emissiveColor?? new Color3(0.0, 0.0, 0.0);
         
         this.btnPlane = MeshBuilder.CreatePlane("btnPlane:", {
-          width: buttonOptions?.width?? 1.5,
-          height: buttonOptions?.height?? 1.5,
+          width: btnWidth,
+          height: btnHeight,
         });
         this.btnPlane.material = this.btnMat;
         this.btnPlane.setParent(this);
     
+        //Btn Border
+        const borderWidth = btnWidth + (buttonOptions?.borderThickness?? (btnWidth / 10));
+        const borderHeight = btnHeight + (buttonOptions?.borderThickness?? (btnHeight / 10));
+        const borderPlane = MeshBuilder.CreatePlane(
+          "borderPlane",
+          {
+            height: borderWidth,
+            width: borderHeight,
+          },
+          scene
+        );
+        borderPlane.position = this.btnPlane.position.clone();
+        borderPlane.position.z += 0.001;
+        var borderMat = new StandardMaterial("borderMat", scene);
+        borderMat.diffuseColor = buttonOptions?.borderColor ?? Color3.Black();
+        borderPlane.material = borderMat;
+        borderPlane.setParent( this.btnPlane);
+
         //Text
         this.textString = new TextString(id + "btnText",textOptions)
         this.textString.textPlane.setParent(this);

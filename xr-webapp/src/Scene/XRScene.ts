@@ -384,16 +384,16 @@ export class XRScene {
   }
 
   CreateReactionUI() {
-    this.joinReactionParent = new AbstractMesh("joinReactionParent");
-    this.CreateJoinReactionZone();
-    this.CreateJoinPanel();
-    this.CreateJoinBtns();
-    this.joinReactionParent.position = new Vector3(5.85, 0.83, -0.33);
+    // this.joinReactionParent = new AbstractMesh("joinReactionParent");
+    // this.CreateJoinReactionZone();
+    // this.CreateJoinPanel();
+    // this.CreateJoinBtns();
+    // this.joinReactionParent.position = new Vector3(5.85, 0.83, -0.33);
     
-    // this.breakReactionParent = new AbstractMesh("breakReactionParent");
-    // this.CreateBreakReactionZone();
-    // this.CreateBreakPanel();
-    // this.CreateBreakBtns();
-    // this.breakReactionParent.position = new Vector3(5.85, 0.83, -0.33);
+    this.breakReactionParent = new AbstractMesh("breakReactionParent");
+    this.CreateBreakReactionZone();
+    this.CreateBreakPanel();
+    this.CreateBreakBtns();
+    this.breakReactionParent.position = new Vector3(5.85, 0.83, -0.33);
   }
 }
