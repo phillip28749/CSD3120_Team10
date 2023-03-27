@@ -39,4 +39,16 @@ export class TimeEvent {
     {
         this.callback = callback;
     }
+
+    public setTimeoutInMS(ms)
+    {
+        this.stop()
+        this.ms = ms
+    }
+
+    public setTimeoutInSecond(ms)
+    {
+        this.stop()
+        this.ms = ms * 0.001
+    }
 }

@@ -86,9 +86,6 @@ export class MoleculeManager {
       ++count;
 
       if (addingMol === MoleculeInZone.Reactant) {
-        GLOBAL.print("Add reactant name:" + m.name);
-        this.reactList.set(m.name, count);
-
         //Adding reactant to list
         const numRows = 3;
         const numCols = 3;
@@ -106,6 +103,9 @@ export class MoleculeManager {
             });
           return;
         }
+
+        GLOBAL.print("Add reactant name:" + m.name);
+        this.reactList.set(m.name, count);
 
         //Add to display panel
         const rowNo = MoleculeManager.molCounter % numRows;
@@ -331,6 +331,7 @@ export class MoleculeManager {
     return m.mesh.clone(m.mesh.name + "_clone", null);
   }
 
+  
   cloneMolecule(m: Molecule): Nullable<Molecule> {
     return new Molecule(
       m.name + "_clone",

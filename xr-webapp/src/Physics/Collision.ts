@@ -120,6 +120,7 @@ export class Collision {
 
       // reaction trigger logic
       GLOBAL.print("Meshes intersecting!");
+      xrScene.reactionZone.particleEvent.start()
       xrScene.moleculeMg.addMoleculeToList(xrScene.moleculeMg.currSelected);
       xrScene.moleculeMg.currSelected = null;
       xrScene.pickedMesh.dispose();

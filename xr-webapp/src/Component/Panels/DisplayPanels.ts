@@ -1,15 +1,21 @@
 import {
+  AbstractMesh,
   ActionManager,
   Color3,
+  Color4,
   ExecuteCodeAction,
   Mesh,
   MeshBuilder,
   Nullable,
+  ParticleSystem,
   Scene,
   Space,
   StandardMaterial,
+  Texture,
   TransformNode,
   Vector3,
+  VertexBuffer,
+  VertexData,
 } from "babylonjs";
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui";
 import { GLOBAL } from "../../Global";
@@ -24,6 +30,8 @@ export class DisplayPanel extends TransformNode {
 
   textStrings: TextString[];
   moleculeList: Molecule[];
+
+  particleSys: ParticleSystem;
 
   constructor(
     id: string,
@@ -51,9 +59,11 @@ export class DisplayPanel extends TransformNode {
       panelOptions?.color ?? new Color3(0.0, 0.0, 0.0);
     this.panelMat.alpha = panelOptions?.transparency ?? 1.0;
 
+    const planeWidth = panelOptions?.width ?? 1.5
+    const planeHeight = panelOptions?.height ?? 1.5
     this.panelPlane = MeshBuilder.CreatePlane("panelPlane:" + id, {
-      width: panelOptions?.width ?? 1.5,
-      height: panelOptions?.height ?? 1.5,
+      width: planeWidth,
+      height: planeHeight,
     });
     this.panelPlane.material = this.panelMat;
     this.panelPlane.setParent(this);
@@ -190,41 +200,41 @@ export class DisplayPanel extends TransformNode {
     name: string,
     moleculeMg: MoleculeManager,
     position?: Vector3
-  ) {
-    moleculeMg.getAllMolecules().forEach((m) => {
+  ): Nullable<Molecule> {
+    for (const m of moleculeMg.getAllMolecules()) {
       if (name === m.label.textBlock.text) {
-        var cloneMol = moleculeMg.cloneMolecule(m);
+        const cloneMol = moleculeMg.cloneMolecule(m);
 
         const restoreDPpos = this.position;
         const restoreDPscale = this.scaling;
         const restoreDProtation = this.rotationQuaternion;
-    
+
         this.position = Vector3.Zero();
         this.scaling = Vector3.One();
         this.rotation = Vector3.Zero();
-    
+
         cloneMol.mesh.setParent(this);
         cloneMol.mesh.position = position ?? Vector3.Zero();
-        cloneMol.mesh.scaling.setAll(0.3)
+        cloneMol.mesh.scaling.setAll(0.3);
         cloneMol.mesh.rotate(Vector3.Down(), Math.PI * 0.5, Space.LOCAL);
         cloneMol.mesh.rotate(Vector3.Backward(), Math.PI * 0.5, Space.LOCAL);
-    
+
         this.position = restoreDPpos;
         this.scaling = restoreDPscale;
         this.rotation = restoreDProtation?.toEulerAngles() ?? Vector3.Zero();
         this.rotationQuaternion = restoreDProtation;
-    
+
         this.moleculeList.push(cloneMol);
-        return;
+        return cloneMol;
       }
-    });
+    }
+    return null;
   }
 
-  ClearMolecules() 
-  {
+  ClearMolecules() {
     while (this.moleculeList.length > 0) {
       const tempMol = this.moleculeList.pop();
-      tempMol.mesh.dispose()
+      tempMol.mesh.dispose();
     }
   }
 }
