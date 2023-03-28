@@ -1,19 +1,24 @@
 import {
   AbstractMesh,
+  Animation,
+  AnimationGroup,
   Color3,
   CubeTexture,
   Engine,
   FreeCamera,
   HemisphericLight,
+  Matrix,
   Mesh,
   MeshBuilder,
   Nullable,
+  PointerEventTypes,
   Scene,
   SceneLoader,
   Space,
   StandardMaterial,
   Texture,
   Vector3,
+  VideoTexture,
   WebXRDefaultExperience,
 } from "babylonjs";
 import {
@@ -29,9 +34,12 @@ import { SceneCamera } from "../Camera/SceneCamera";
 import { ParticleEvent } from "../Events/index";
 import { GLOBAL } from "../Global";
 import { Collision } from "../Physics/Collision";
+import { AuthoringData } from "xrauthor-loader";
+import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui";
 
 export class XRScene {
   canvas: HTMLCanvasElement;
+  authorData: AuthoringData
 
   scene: Scene;
   sceneCam: SceneCamera;
@@ -55,7 +63,7 @@ export class XRScene {
   reactionZone: ReactionZone; // the mesh representation for the scene's reaction zone
   reactionPanel: DisplayPanel;
 
-  constructor(engine: Engine, canvas: HTMLCanvasElement) {
+  constructor(engine: Engine, canvas: HTMLCanvasElement, authorData: AuthoringData) {
     this.moleculeMg = new MoleculeManager(this);
 
     this.reactionParent = null;
@@ -66,6 +74,7 @@ export class XRScene {
 
     this.pickedMesh = null;
     this.canvas = canvas;
+    this.authorData = authorData;
     this.scene = new Scene(engine);
     this.sceneCam = new SceneCamera(this.scene, this.canvas);
 
@@ -82,9 +91,9 @@ export class XRScene {
     this.LoadEnvironment();
     this.LoadMolecules();
     this.CreateReactionUI();
-
-    //create particles event for reaction effect
-    //this.pEvent.init(this.scene);
+    
+    //XRAuthor Video
+    this.createXRAuthorVideo(15, 30, this.scene);
   }
 
   OnUpdate() {
@@ -391,5 +400,184 @@ export class XRScene {
     this.CreateReactionPanel();
     this.CreateReactionBtns();
     this.reactionParent.position = new Vector3(5.85, 0.83, -0.33);
+  }
+
+
+  createXRAuthorVideo(videoHeight: number, xOffset: number, scene: Scene) {
+    //Video player
+    const videoWidth = videoHeight * this.authorData.recordingData.aspectRatio;
+    const videoPlane = MeshBuilder.CreatePlane(
+      "xrauthorVideoPlane",
+      {
+        height: videoHeight,
+        width: videoWidth,
+      },
+      scene
+    );
+    videoPlane.position.x = xOffset;
+    var angle = Math.PI / 2;
+    var axis = new Vector3(0, 1, 0);
+    videoPlane.rotate(axis, angle, BABYLON.Space.WORLD);
+    const videoMaterial = new StandardMaterial(
+      "xrauthor video material",
+      scene
+    );
+    const videoTexture = new VideoTexture(
+      "xrauthor video texture",
+      this.authorData.video,
+      scene
+    );
+    videoTexture.onUserActionRequestedObservable.add(() => {});
+    videoMaterial.diffuseTexture = videoTexture;
+    videoMaterial.roughness = 1;
+    videoMaterial.emissiveColor = Color3.White();
+    videoPlane.material = videoMaterial;
+
+    //Video Border
+    const videoBorderThickness = videoHeight / 4;
+    const videoBorderPlane = MeshBuilder.CreatePlane(
+      "xrauthorBorderPlane",
+      {
+        height: videoHeight + videoBorderThickness,
+        width: videoWidth + videoBorderThickness,
+      },
+      scene
+    );
+    videoBorderPlane.position = videoPlane.position.clone();
+    videoBorderPlane.position.x += 0.1;
+    videoBorderPlane.rotate(axis, angle, BABYLON.Space.WORLD);
+    videoBorderPlane.setParent(videoPlane);
+    var borderMat = new StandardMaterial("borderMat", scene);
+    borderMat.diffuseColor = Color3.Blue();
+    videoBorderPlane.material = borderMat;
+
+    //Video Play/Pause Button
+    const playPauseBtn = MeshBuilder.CreatePlane(
+      "playPauseplane",
+      { width: videoBorderThickness / 1.25, height: videoBorderThickness / 4 },
+      scene
+    );
+    const playPauseTexture = AdvancedDynamicTexture.CreateForMesh(
+      playPauseBtn,
+      300,
+      100,
+      false
+    );
+    playPauseTexture.name = "playPauseTexture";
+    playPauseTexture.background = "grey";
+    const playPauseText = new TextBlock();
+    playPauseText.color = "white";
+    playPauseText.fontSize = 60;
+    playPauseText.text = "PLAY";
+    playPauseTexture.addControl(playPauseText);
+    playPauseBtn.position = videoPlane.position.clone();
+    playPauseBtn.position.x -= 0.1;
+    playPauseBtn.position.y += videoHeight / 2 + videoBorderThickness / 4;
+    playPauseBtn.rotate(axis, angle, BABYLON.Space.WORLD);
+    playPauseBtn.setParent(videoPlane);
+
+    //Video Controller
+    videoTexture.video.autoplay = false;
+    const animationGroup = new AnimationGroup(
+      "xrauthor animation group",
+      scene
+    );
+    scene.onPointerObservable.add((evtData) => {
+      if (evtData.pickInfo.pickedMesh === playPauseBtn) {
+        if (videoTexture.video.paused) {
+          playPauseText.text = "PAUSE";
+          videoTexture.video.play();
+          animationGroup.play(true);
+        } else {
+          playPauseText.text = "PLAY";
+          videoTexture.video.pause();
+          animationGroup.pause();
+        }
+      }
+    }, PointerEventTypes.POINTERPICK);
+
+    //XRAuthor Animation
+    const tracks = this.authorData.recordingData.animation.tracks;
+    for (let id in tracks) {
+      const track = this.authorData.recordingData.animation.tracks[id];
+      const length = track.times.length;
+      const fps = length / this.authorData.recordingData.animation.duration;
+
+      const depth = Math.abs(videoPlane.position.z) - 0.4;
+      const scaleForDepth = depth / this.authorData.recordingData.videoPlaneDepth;
+      const fov = (this.authorData.recordingData.fovInDegrees * Math.PI) / 180;
+      const videoHeightFromRecordingAfterDepthScaling =
+        Math.tan(fov / 2) * depth * 2;
+      const scaleForSize =
+        videoHeight / videoHeightFromRecordingAfterDepthScaling;
+
+      const keyFrames = [];
+      for (let i = 0; i < length; i++) {
+        const mat = Matrix.FromArray(track.matrices[i].elements);
+        const pos = mat.getTranslation();
+        //convert position from right handed to left handed coords
+        pos.z = -pos.z;
+        keyFrames.push({
+          frame: track.times[i] * fps,
+          value: pos
+            .scale(scaleForDepth)
+            .multiplyByFloats(scaleForSize, scaleForSize, 1),
+        });
+      }
+      const animation = new Animation(
+        "animation",
+        "position",
+        fps,
+        Animation.ANIMATIONTYPE_VECTOR3,
+        Animation.ANIMATIONLOOPMODE_CYCLE
+      );
+      animation.setKeys(keyFrames);
+
+      //Loading Models from XRAuthor Video
+      const info = this.authorData.recordingData.modelInfo[id];
+      const label = info.label;
+      const name = info.name;
+      const url = this.authorData.models[name];
+
+      //Model Label
+      const labelPlane = MeshBuilder.CreatePlane(
+        "label plane " + id,
+        { width: 2.5, height: 1 },
+        scene
+      );
+      const labelTexture = AdvancedDynamicTexture.CreateForMesh(
+        labelPlane,
+        250,
+        100,
+        false
+      );
+      labelTexture.name = "label texture " + id;
+      const labelText = new TextBlock();
+      labelText.color = "purple";
+      labelText.fontSize = 100;
+      labelTexture.addControl(labelText);
+
+      SceneLoader.AppendAsync(url, undefined, scene, undefined, ".glb").then(
+        (result) => {
+          const root = result.getMeshById("__root__");
+          root.id = id + ": " + label;
+          root.name = label;
+          root.scaling.setAll(2);
+          root.setParent(videoPlane);
+          root.rotate(axis, angle, BABYLON.Space.WORLD);
+
+          //Label text
+          labelPlane.position.setAll(0);
+          labelPlane.setParent(root);
+          labelPlane.position.y += -0.8;
+          labelPlane.position.z += -0.1;
+          labelPlane.rotate(axis, angle, BABYLON.Space.WORLD);
+          labelText.text = label;
+
+          animationGroup.addTargetedAnimation(animation, root);
+          animationGroup.reset();
+        }
+      );
+    }
   }
 }

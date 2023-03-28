@@ -1,4 +1,11 @@
 
-import { createXRScene } from "./init";
+// import { createXRScene } from "./init";
 
-createXRScene("renderCanvas",null)
+// createXRScene("renderCanvas",null)
+
+import {AuthoringData, loadAuthoringData} from 'xrauthor-loader'
+import {createXRScene} from './init'
+
+loadAuthoringData('assets/test').then((data: AuthoringData) => {
+    createXRScene('renderCanvas', data)
+})

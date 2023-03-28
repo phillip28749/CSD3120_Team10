@@ -11,16 +11,17 @@ import { Locomotion } from "./Input/index";
 import { Collision } from "./Physics/Collision";
 import "babylonjs-loaders";
 import { GLOBAL } from "./Global";
+import { AuthoringData } from "xrauthor-loader";
 
 export class App {
   private engine: Engine;
   private canvas: HTMLCanvasElement;
-  private authorData: any;
+  private authorData: AuthoringData;
 
   private xrScene: XRScene;
   private locomotion: Locomotion;
 
-  constructor(engine: Engine, canvas: HTMLCanvasElement, authorData: any) {
+  constructor(engine: Engine, canvas: HTMLCanvasElement, authorData: AuthoringData) {
     this.engine = engine;
     this.canvas = canvas;
     this.authorData = authorData;
@@ -33,7 +34,7 @@ export class App {
    */
   async createScene() {
     //create scene
-    this.xrScene = new XRScene(this.engine, this.canvas);
+    this.xrScene = new XRScene(this.engine, this.canvas, this.authorData);
 
     //create xr camera
     this.createXRCamera(this.xrScene.scene, this.xrScene.sceneCam.camera);
