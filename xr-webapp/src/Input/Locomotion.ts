@@ -23,7 +23,7 @@ export class Locomotion
             {
                 xrInput: xr.input,
                 floorMeshes: [ground],
-                timeToTeleport: tpOption?.time?? 4000,
+                timeToTeleport: tpOption?.time?? 2000,
                 useMainComponentOnly: true,
                 defaultTargetMeshOptions: {
                     teleportationFillColor: tpOption?.fillColor?? "#55FF99",
