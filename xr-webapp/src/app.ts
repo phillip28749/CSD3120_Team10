@@ -119,6 +119,7 @@ export class App {
       const featureManager = xr.baseExperience.featuresManager;
       //locomotion
       this.locomotion = new Locomotion(xr, featureManager, tpGround);
+      this.xrScene.SetLocomotion(this.locomotion)
     });
 
     //only for debugging

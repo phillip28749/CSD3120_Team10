@@ -3,7 +3,6 @@ import {
   Color3,
   CubeTexture,
   Engine,
-  FreeCamera,
   HemisphericLight,
   Mesh,
   MeshBuilder,
@@ -29,9 +28,11 @@ import { SceneCamera } from "../Camera/SceneCamera";
 import { ParticleEvent } from "../Events/index";
 import { GLOBAL } from "../Global";
 import { Collision } from "../Physics/Collision";
+import { Locomotion } from "../Input";
 
 export class XRScene {
   canvas: HTMLCanvasElement;
+  locomotion: Locomotion;
 
   scene: Scene;
   sceneCam: SceneCamera;
@@ -68,6 +69,7 @@ export class XRScene {
     this.canvas = canvas;
     this.scene = new Scene(engine);
     this.sceneCam = new SceneCamera(this.scene, this.canvas);
+    this.locomotion = null
 
     if (GLOBAL.DEBUG_MODE) {
       //Position of the table
@@ -87,6 +89,10 @@ export class XRScene {
     //this.pEvent.init(this.scene);
   }
 
+  SetLocomotion(locomotion: Locomotion)
+  {
+    this.locomotion = locomotion
+  }
   OnUpdate() {
     switch (this.moleculeMg.molInZone) {
       case MoleculeInZone.Reactant: {
@@ -260,7 +266,7 @@ export class XRScene {
     };
     this.reactionResetBtn = new SceneButton(
       "reactionResetBtn",
-      this.scene,
+      this,
       onResetClick,
       new Vector3(-0.2, 0, -0.1),
       { text: "RESET", fontSize: 300, outlineWidth: 30 },
@@ -342,7 +348,7 @@ export class XRScene {
     };
     this.reactionBtn = new SceneButton(
       "reactionBtn",
-      this.scene,
+      this,
       onReactClick,
       new Vector3(-0.2, 0, 0.1),
       { text: "REACT", fontSize: 300, outlineWidth: 30 },

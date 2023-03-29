@@ -1,6 +1,7 @@
 import { ActionManager, Color3, ExecuteCodeAction, Mesh, MeshBuilder, Scene, Space, StandardMaterial, TransformNode, Vector3 } from "babylonjs";
 import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui";
 import { GLOBAL } from "../../Global";
+import { XRScene } from "../../Scene/XRScene";
 import { TextString } from "../Text/TextString";
 
 type TriggerAction = () => void;
@@ -12,7 +13,7 @@ export class SceneButton extends TransformNode
 
     textString: TextString
 
-    constructor(id: string, scene: Scene, 
+    constructor(id: string, xrScene: XRScene, 
         triggerCB: TriggerAction,
         position: Vector3,
         textOptions?: { position?: Vector3, text?: string, color?: string, outlineColor?: string, 
@@ -26,7 +27,7 @@ export class SceneButton extends TransformNode
         const btnHeight = buttonOptions?.height?? 1.5
 
         //plane btn background
-        this.btnMat = new StandardMaterial("btnPlaneMat", scene);
+        this.btnMat = new StandardMaterial("btnPlaneMat", xrScene.scene);
         this.btnMat.backFaceCulling = false; // disable backface culling
         this.btnMat.emissiveColor = buttonOptions?.emissiveColor?? new Color3(0.0, 0.0, 0.0);
         
@@ -46,11 +47,11 @@ export class SceneButton extends TransformNode
             height: borderWidth,
             width: borderHeight,
           },
-          scene
+          xrScene.scene
         );
         borderPlane.position = this.btnPlane.position.clone();
         borderPlane.position.z += 0.001;
-        var borderMat = new StandardMaterial("borderMat", scene);
+        var borderMat = new StandardMaterial("borderMat", xrScene.scene);
         borderMat.diffuseColor = buttonOptions?.borderColor ?? Color3.Gray();
         borderPlane.material = borderMat;
         borderPlane.setParent( this.btnPlane);
@@ -60,15 +61,23 @@ export class SceneButton extends TransformNode
         this.textString.textPlane.setParent(this);
 
         // create an action to handle the click event
-        const clickAction = new ExecuteCodeAction(
-          ActionManager.OnPickTrigger,
+        const clickDownAction = new ExecuteCodeAction(
+          ActionManager.OnPickDownTrigger,
           () => {
+            xrScene.locomotion.disableTeleport()
             triggerCB()
           }
         );
+        const clickUpAction = new ExecuteCodeAction(
+          ActionManager.OnPickUpTrigger,
+          () => {
+            xrScene.locomotion.enableTeleport()
+          }
+        );
         // add the click action to the actionManager
-        this.btnPlane.actionManager = new ActionManager(scene);
-        this.btnPlane.actionManager.registerAction(clickAction);
+        this.btnPlane.actionManager = new ActionManager(xrScene.scene);
+        this.btnPlane.actionManager.registerAction(clickDownAction);
+        this.btnPlane.actionManager.registerAction(clickUpAction);
     
         //Scene Button properties
         this.position = position;

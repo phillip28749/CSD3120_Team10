@@ -1,4 +1,4 @@
-import { AbstractMesh, Vector3, WebXRDefaultExperience } from "babylonjs";
+import { AbstractMesh, Vector3, WebXRDefaultExperience, WebXRFeatureName } from "babylonjs";
 import { XRScene } from "../Scene/XRScene";
 import { GLOBAL } from "../Global";
 
@@ -27,7 +27,6 @@ export class Collision {
       xrScene.moleculeMg.currSelected = null;
     };
 
-    
     if (GLOBAL.DEBUG_MODE) {
       //Mouse Picking
       var parentMesh = new AbstractMesh("MousePicking");
@@ -77,32 +76,41 @@ export class Collision {
         const trigger = motionController.getComponentOfType("trigger");
         trigger.onButtonStateChangedObservable.add((state) => {
           if (trigger.changes.pressed) {
-            if (xrScene.pickedMesh != null)
-              // make sure only one item is selected at a time
-              return;
+            if (trigger.pressed) {
 
-            let pickMesh: AbstractMesh;
-            if (
-              (pickMesh = xr.pointerSelection.getMeshUnderPointer(
-                controller.uniqueId
-              ))
-            ) {
-              GLOBAL.print("mesh under controllerx pointer: " + pickMesh);
-              // only allow picking if its a molecule
-              if (pickMesh.name.indexOf("Molecule") !== -1) {
-                const distance = Vector3.Distance(
-                  motionController.rootMesh.getAbsolutePosition(),
-                  pickMesh.getAbsolutePosition()
-                );
-                if (distance < 1) {
-                  GLOBAL.print(
-                    "motionController.rootMesh " + motionController.rootMesh
+              if (xrScene.pickedMesh != null)
+                // make sure only one item is selected at a time
+                return;
+
+              let pickMesh: AbstractMesh;
+              if (
+                (pickMesh = xr.pointerSelection.getMeshUnderPointer(
+                  controller.uniqueId
+                ))
+              ) {
+                GLOBAL.print("mesh under controllerx pointer: " + pickMesh);
+                // only allow picking if its a molecule
+                if (pickMesh.name.indexOf("Molecule") !== -1) {
+                  const distance = Vector3.Distance(
+                    motionController.rootMesh.getAbsolutePosition(),
+                    pickMesh.getAbsolutePosition()
                   );
-                  pickingAction(pickMesh, motionController.rootMesh);
+                  if (distance < 1) {
+                    GLOBAL.print(
+                      "motionController.rootMesh " + motionController.rootMesh
+                    );
+                    
+                    console.log("xrScene.locomotion " + xrScene.locomotion)
+                    console.log("xrScene.locomotion.tp " + xrScene.locomotion?.teleportation)
+                    xrScene.locomotion?.disableTeleport()
+                    pickingAction(pickMesh, motionController.rootMesh);
+                  }
                 }
               }
             } else {
               releaseAction();
+              
+              xrScene.locomotion?.enableTeleport()
             }
           }
         });
@@ -110,17 +118,18 @@ export class Collision {
     });
   }
 
-  static OnCollision(xrScene: XRScene)
-  {
+  static OnCollision(xrScene: XRScene) {
     //reaction zone trigger update
     if (!xrScene.pickedMesh) return;
-    if (xrScene.pickedMesh.intersectsMesh(xrScene.reactionZone.mesh, false, true)) {
-      xrScene.reactionPanel.DeleteContainText("RESULT")
+    if (
+      xrScene.pickedMesh.intersectsMesh(xrScene.reactionZone.mesh, false, true)
+    ) {
+      xrScene.reactionPanel.DeleteContainText("RESULT");
       xrScene.reactionPanel.ClearMolecules();
 
       // reaction trigger logic
       GLOBAL.print("Meshes intersecting!");
-      xrScene.reactionZone.particleEvent.start()
+      xrScene.reactionZone.particleEvent.start();
       xrScene.moleculeMg.addMoleculeToList(xrScene.moleculeMg.currSelected);
       xrScene.moleculeMg.currSelected = null;
       xrScene.pickedMesh.dispose();
