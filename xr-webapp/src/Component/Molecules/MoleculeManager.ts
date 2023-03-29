@@ -120,11 +120,11 @@ export class MoleculeManager {
           position: textPos,
           color: "grey",
         });
-      } else 
-      {//Adding reaction to list
+      } else {
+        //Adding reaction to list
         //Can only have 1 reaction in the list
         this.ResetReactList();
-        this.molInZone = MoleculeInZone.Reaction
+        this.molInZone = MoleculeInZone.Reaction;
 
         GLOBAL.print("Add reaction name:" + m.name);
         this.reactList.set(m.name, count);
@@ -154,7 +154,7 @@ export class MoleculeManager {
       this.reactList.set(m.name, 0);
     });
     MoleculeManager.molCounter = 0;
-    this.molInZone = MoleculeInZone.None
+    this.molInZone = MoleculeInZone.None;
     GLOBAL.print("clear reaction list");
   }
 
@@ -223,8 +223,14 @@ export class MoleculeManager {
       o2c !== undefined &&
       o2c == 1 &&
       (h2c === undefined || h2c === 0)
-    )
-      m = this.reactions[0];
+    ) {
+      for (let i = 0; i < this.reactions.length; ++i) {
+        if (this.reactions[i].label.textBlock.text === "CO2") {
+          m = this.reactions[i];
+          break;
+        }
+      }
+    }
     //C6H6
     else if (
       cc !== undefined &&
@@ -233,7 +239,12 @@ export class MoleculeManager {
       h2c == 3 &&
       (o2c === undefined || o2c === 0)
     )
-      m = this.reactions[1];
+      for (let i = 0; i < this.reactions.length; ++i) {
+        if (this.reactions[i].label.textBlock.text === "C6H6") {
+          m = this.reactions[i];
+          break;
+        }
+      }
 
     //reaction success clear the reaction list
     if (m != null) this.ResetReactList();
@@ -244,19 +255,16 @@ export class MoleculeManager {
   getBreakResult(): Molecule[] {
     const isAlphabet = (char: string): boolean => /[a-zA-Z]/.test(char);
 
-    var labelText : Nullable<string> = null;
-    if(this.reactList.get("CO2"))
-    {
-      labelText = "CO2"
-    }
-    else
-    {
-      labelText = "C6H6"
+    var labelText: Nullable<string> = null;
+    if (this.reactList.get("CO2")) {
+      labelText = "CO2";
+    } else {
+      labelText = "C6H6";
     }
 
     var result: Molecule[] = [];
-    if (labelText !== null) 
-    {//Finding out which molecule/atom to break up into
+    if (labelText !== null) {
+      //Finding out which molecule/atom to break up into
       var breakReactionList = new Map<string, number>();
       //e.g. CO2
       for (let i = 0; i < labelText.length - 1; ) {
@@ -270,10 +278,7 @@ export class MoleculeManager {
           } else {
             //e.g. C6H6 -> C6 (6 is a number)
             if (labelText[i] === "C") {
-              breakReactionList.set(
-                labelText[i],
-                parseInt(labelText[i + 1])
-              );
+              breakReactionList.set(labelText[i], parseInt(labelText[i + 1]));
             } else {
               //For O2 and H2
               breakReactionList.set(
@@ -281,7 +286,7 @@ export class MoleculeManager {
                 parseInt(labelText[i + 1]) / 2
               );
             }
-            i+=2;
+            i += 2;
           }
         }
       }
@@ -290,9 +295,9 @@ export class MoleculeManager {
       const o2c = breakReactionList.get("O2");
       const h2c = breakReactionList.get("H2");
 
-      GLOBAL.print("cc " + cc)
-      GLOBAL.print("o2c " + o2c)
-      GLOBAL.print("h2c " + h2c)
+      GLOBAL.print("cc " + cc);
+      GLOBAL.print("o2c " + o2c);
+      GLOBAL.print("h2c " + h2c);
       this.reactants.forEach((m) => {
         var size: number = 0;
 
@@ -331,7 +336,6 @@ export class MoleculeManager {
     return m.mesh.clone(m.mesh.name + "_clone", null);
   }
 
-  
   cloneMolecule(m: Molecule): Nullable<Molecule> {
     return new Molecule(
       m.name + "_clone",
