@@ -93,7 +93,7 @@ export class XRScene {
     this.CreateReactionUI();
     
     //XRAuthor Video
-    this.createXRAuthorVideo(15, 30, this.scene);
+    this.CreateXRAuthorVideo(0.82, new Vector3(7.15, 1.51, 0), this.scene);
   }
 
   OnUpdate() {
@@ -403,7 +403,7 @@ export class XRScene {
   }
 
 
-  createXRAuthorVideo(videoHeight: number, xOffset: number, scene: Scene) {
+  CreateXRAuthorVideo(videoHeight: number, position: Vector3, scene: Scene) {
     //Video player
     const videoWidth = videoHeight * this.authorData.recordingData.aspectRatio;
     const videoPlane = MeshBuilder.CreatePlane(
@@ -414,47 +414,47 @@ export class XRScene {
       },
       scene
     );
-    videoPlane.position.x = xOffset;
-    var angle = Math.PI / 2;
-    var axis = new Vector3(0, 1, 0);
-    videoPlane.rotate(axis, angle, BABYLON.Space.WORLD);
+    videoPlane.position = position
     const videoMaterial = new StandardMaterial(
-      "xrauthor video material",
+      "xrauthorMaterial",
       scene
     );
     const videoTexture = new VideoTexture(
-      "xrauthor video texture",
+      "xrauthorTexture",
       this.authorData.video,
       scene
     );
     videoTexture.onUserActionRequestedObservable.add(() => {});
     videoMaterial.diffuseTexture = videoTexture;
     videoMaterial.roughness = 1;
+    videoMaterial.backFaceCulling = false; // disable backface culling
     videoMaterial.emissiveColor = Color3.White();
     videoPlane.material = videoMaterial;
 
     //Video Border
-    const videoBorderThickness = videoHeight / 4;
+    const videoBorderWidth = videoHeight / 20;
+    const videoBorderHeight = videoHeight / 8;
     const videoBorderPlane = MeshBuilder.CreatePlane(
       "xrauthorBorderPlane",
       {
-        height: videoHeight + videoBorderThickness,
-        width: videoWidth + videoBorderThickness,
+        height: videoHeight + videoBorderHeight,
+        width: videoWidth + videoBorderWidth,
       },
       scene
     );
     videoBorderPlane.position = videoPlane.position.clone();
-    videoBorderPlane.position.x += 0.1;
-    videoBorderPlane.rotate(axis, angle, BABYLON.Space.WORLD);
-    videoBorderPlane.setParent(videoPlane);
+    videoBorderPlane.position.z += 0.001
     var borderMat = new StandardMaterial("borderMat", scene);
-    borderMat.diffuseColor = Color3.Blue();
+    borderMat.emissiveColor = Color3.White();
+    borderMat.backFaceCulling = false; // disable backface culling
     videoBorderPlane.material = borderMat;
 
     //Video Play/Pause Button
+    const playBtnWidth = videoBorderWidth * 3
+    const playBtnHeight = videoBorderHeight / 2
     const playPauseBtn = MeshBuilder.CreatePlane(
       "playPauseplane",
-      { width: videoBorderThickness / 1.25, height: videoBorderThickness / 4 },
+      { width: playBtnWidth, height: playBtnHeight },
       scene
     );
     const playPauseTexture = AdvancedDynamicTexture.CreateForMesh(
@@ -464,17 +464,19 @@ export class XRScene {
       false
     );
     playPauseTexture.name = "playPauseTexture";
-    playPauseTexture.background = "grey";
+    playPauseTexture.background = "black";
     const playPauseText = new TextBlock();
     playPauseText.color = "white";
     playPauseText.fontSize = 60;
     playPauseText.text = "PLAY";
     playPauseTexture.addControl(playPauseText);
     playPauseBtn.position = videoPlane.position.clone();
-    playPauseBtn.position.x -= 0.1;
-    playPauseBtn.position.y += videoHeight / 2 + videoBorderThickness / 4;
-    playPauseBtn.rotate(axis, angle, BABYLON.Space.WORLD);
+    playPauseBtn.position.y += videoHeight / 2 + playBtnHeight / 4;
+
+    videoPlane.position.y += -videoBorderWidth / 2;
+    videoBorderPlane.setParent(videoPlane);
     playPauseBtn.setParent(videoPlane);
+    videoPlane.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
 
     //Video Controller
     videoTexture.video.autoplay = false;
@@ -538,6 +540,7 @@ export class XRScene {
       const label = info.label;
       const name = info.name;
       const url = this.authorData.models[name];
+      console.log(url)
 
       //Model Label
       const labelPlane = MeshBuilder.CreatePlane(
@@ -564,14 +567,14 @@ export class XRScene {
           root.name = label;
           root.scaling.setAll(2);
           root.setParent(videoPlane);
-          root.rotate(axis, angle, BABYLON.Space.WORLD);
+          //root.rotate(axis, angle, BABYLON.Space.WORLD);
 
           //Label text
           labelPlane.position.setAll(0);
           labelPlane.setParent(root);
           labelPlane.position.y += -0.8;
           labelPlane.position.z += -0.1;
-          labelPlane.rotate(axis, angle, BABYLON.Space.WORLD);
+          //labelPlane.rotate(axis, angle, BABYLON.Space.WORLD);
           labelText.text = label;
 
           animationGroup.addTargetedAnimation(animation, root);
