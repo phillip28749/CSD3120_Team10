@@ -99,9 +99,6 @@ export class Collision {
                     GLOBAL.print(
                       "motionController.rootMesh " + motionController.rootMesh
                     );
-                    
-                    console.log("xrScene.locomotion " + xrScene.locomotion)
-                    console.log("xrScene.locomotion.tp " + xrScene.locomotion?.teleportation)
                     xrScene.locomotion?.disableTeleport()
                     pickingAction(pickMesh, motionController.rootMesh);
                   }
@@ -109,7 +106,6 @@ export class Collision {
               }
             } else {
               releaseAction();
-              
               xrScene.locomotion?.enableTeleport()
             }
           }

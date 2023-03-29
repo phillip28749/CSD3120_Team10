@@ -7,13 +7,11 @@ export class Locomotion
 
     disableTeleport()
     {
-        const success = this.teleportation.detach();
-        GLOBAL.print("detach success " + success)
+        this.teleportation.detach();
     }
     enableTeleport()
     {   
-        const success = this.teleportation.attach();
-        GLOBAL.print("attach success " + success)
+        this.teleportation.attach();
     }
 
     constructor(xr: WebXRDefaultExperience, featureManager: WebXRFeaturesManager, ground: AbstractMesh, tpOption?: { time?: number, fillColor?: string, borderColor?: string }) {

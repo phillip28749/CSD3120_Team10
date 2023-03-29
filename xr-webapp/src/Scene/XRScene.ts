@@ -1,10 +1,12 @@
 import {
   AbstractMesh,
+  ActionManager,
   Animation,
   AnimationGroup,
   Color3,
   CubeTexture,
   Engine,
+  ExecuteCodeAction,
   HemisphericLight,
   Matrix,
   Mesh,
@@ -40,7 +42,7 @@ import { Locomotion } from "../Input";
 export class XRScene {
   canvas: HTMLCanvasElement;
   locomotion: Locomotion;
-  authorData: AuthoringData
+  authorData: AuthoringData;
 
   scene: Scene;
   sceneCam: SceneCamera;
@@ -64,7 +66,11 @@ export class XRScene {
   reactionZone: ReactionZone; // the mesh representation for the scene's reaction zone
   reactionPanel: DisplayPanel;
 
-  constructor(engine: Engine, canvas: HTMLCanvasElement, authorData: AuthoringData) {
+  constructor(
+    engine: Engine,
+    canvas: HTMLCanvasElement,
+    authorData: AuthoringData
+  ) {
     this.moleculeMg = new MoleculeManager(this);
 
     this.reactionParent = null;
@@ -78,7 +84,7 @@ export class XRScene {
     this.authorData = authorData;
     this.scene = new Scene(engine);
     this.sceneCam = new SceneCamera(this.scene, this.canvas);
-    this.locomotion = null
+    this.locomotion = null;
 
     if (GLOBAL.DEBUG_MODE) {
       //Position of the table
@@ -93,12 +99,10 @@ export class XRScene {
     this.LoadEnvironment();
     this.LoadMolecules();
     this.CreateReactionUI();
-    
   }
 
-  SetLocomotion(locomotion: Locomotion)
-  {
-    this.locomotion = locomotion
+  SetLocomotion(locomotion: Locomotion) {
+    this.locomotion = locomotion;
   }
   OnUpdate() {
     switch (this.moleculeMg.molInZone) {
@@ -183,10 +187,10 @@ export class XRScene {
     //load molecules
     const moleculesReactants = ["C.glb", "H2.glb", "O2.glb"];
     const moleculesResults = ["C6H6.glb", "CO2.glb"];
-    let totalSize : number = moleculesReactants.length + moleculesResults.length
+    let totalSize: number = moleculesReactants.length + moleculesResults.length;
 
     let zReactant: number = 0.3;
-    let xrAuthorLoaded = false
+    let xrAuthorLoaded = false;
     moleculesReactants.forEach((filePath) => {
       SceneLoader.ImportMeshAsync("", "models/", filePath).then((result) => {
         result.meshes.forEach((mesh) => {
@@ -223,11 +227,14 @@ export class XRScene {
           }
         });
 
-        if(totalSize <= 0 && !xrAuthorLoaded)
-        {
+        if (totalSize <= 0 && !xrAuthorLoaded) {
           //XRAuthor Video
-          this.CreateXRAuthorVideo(0.82, new Vector3(7.15, 1.51, 0), this.scene);
-          xrAuthorLoaded = true
+          this.CreateXRAuthorVideo(
+            0.82,
+            new Vector3(7.15, 1.51, 0),
+            this.scene
+          );
+          xrAuthorLoaded = true;
         }
       });
     });
@@ -270,14 +277,16 @@ export class XRScene {
             totalSize--;
           }
         });
-        if(totalSize <= 0 && !xrAuthorLoaded)
-        {
+        if (totalSize <= 0 && !xrAuthorLoaded) {
           //XRAuthor Video
-          this.CreateXRAuthorVideo(0.82, new Vector3(7.15, 1.51, 0), this.scene);
-          xrAuthorLoaded = true
+          this.CreateXRAuthorVideo(
+            0.82,
+            new Vector3(7.15, 1.51, 0),
+            this.scene
+          );
+          xrAuthorLoaded = true;
         }
       });
-      
     });
   }
 
@@ -323,8 +332,8 @@ export class XRScene {
             );
             const particles = new ParticleEvent();
             particles.init(this.scene, mol?.mesh);
-            particles.particleSystem.createSphereEmitter(0.7, 2.5)
-            particles.setDuration(100)
+            particles.particleSystem.createSphereEmitter(0.7, 2.5);
+            particles.setDuration(100);
             particles.start();
           } else {
             this.moleculeMg.ResetReactList();
@@ -362,8 +371,8 @@ export class XRScene {
 
             const particles = new ParticleEvent();
             particles.init(this.scene, mol?.mesh);
-            particles.particleSystem.createSphereEmitter(0.7, 2.5)
-            particles.setDuration(100)
+            particles.particleSystem.createSphereEmitter(0.7, 2.5);
+            particles.setDuration(100);
             particles.start();
           }
           break;
@@ -426,7 +435,6 @@ export class XRScene {
     this.reactionParent.position = new Vector3(5.85, 0.83, -0.33);
   }
 
-
   CreateXRAuthorVideo(videoHeight: number, position: Vector3, scene: Scene) {
     //Video player
     const videoWidth = videoHeight * this.authorData.recordingData.aspectRatio;
@@ -438,11 +446,8 @@ export class XRScene {
       },
       scene
     );
-    videoPlane.position = position
-    const videoMaterial = new StandardMaterial(
-      "xrauthorMaterial",
-      scene
-    );
+    videoPlane.position = position;
+    const videoMaterial = new StandardMaterial("xrauthorMaterial", scene);
     const videoTexture = new VideoTexture(
       "xrauthorTexture",
       this.authorData.video,
@@ -467,44 +472,111 @@ export class XRScene {
       scene
     );
     videoBorderPlane.position = videoPlane.position.clone();
-    videoBorderPlane.position.z += 0.001
+    videoBorderPlane.position.z += 0.001;
     var borderMat = new StandardMaterial("borderMat", scene);
     borderMat.emissiveColor = Color3.Gray();
     borderMat.diffuseColor = Color3.Gray();
     borderMat.backFaceCulling = false; // disable backface culling
     videoBorderPlane.material = borderMat;
 
+    //Video Buttons
+    const CreateButton = (text: string, btnWidth: number, btnHeight: number, triggerCB: () => void,  position?: Vector3, isTransparentBG: Boolean = false) : [Mesh, TextBlock] => {
+      //Video Play/Pause Button
+      const newBtn = MeshBuilder.CreatePlane(
+        "btnPlane",
+        { width: btnWidth, height: btnHeight },
+        scene
+      );
+      const btnTexture = AdvancedDynamicTexture.CreateForMesh(
+        newBtn,
+        500,
+        200,
+        false
+      );
+      btnTexture.name = "btnTexture";
+      if(!isTransparentBG) btnTexture.background = "grey";
+
+      const btnText = new TextBlock();
+      btnText.color = "white";
+
+      btnText.outlineColor = "black";
+      btnText.outlineWidth = 20;
+      btnText.fontSize = 150;
+      btnText.fontFamily = "Bold Arial";
+      btnText.text = text;
+      btnTexture.addControl(btnText);
+      newBtn.position = position?? Vector3.Zero()
+
+        
+      // create an action to handle the click event
+      const clickDownAction = new ExecuteCodeAction(
+        ActionManager.OnPickDownTrigger,
+        () => {
+          this.locomotion.disableTeleport()
+          triggerCB()
+        }
+      );
+      const clickUpAction = new ExecuteCodeAction(
+        ActionManager.OnPickUpTrigger,
+        () => {
+          this.locomotion.enableTeleport()
+        }
+      );
+      // add the click action to the actionManager
+      newBtn.actionManager = new ActionManager(this.scene);
+      newBtn.actionManager.registerAction(clickDownAction);
+      newBtn.actionManager.registerAction(clickUpAction);
+
+      return [newBtn, btnText]
+    };
+
+    const vidBtnWidth = videoBorderWidth * 4;
+    const vidBtnHeight = videoBorderHeight / 2;
+
     //Video Play/Pause Button
-    const playBtnWidth = videoBorderWidth * 4
-    const playBtnHeight = videoBorderHeight / 2
-    const playPauseBtn = MeshBuilder.CreatePlane(
-      "playPauseplane",
-      { width: playBtnWidth, height: playBtnHeight },
-      scene
-    );
-    const playPauseTexture = AdvancedDynamicTexture.CreateForMesh(
-      playPauseBtn,
-      500,
-      200,
-      false
-    );
-    playPauseTexture.name = "playPauseTexture";
-    playPauseTexture.background = "grey";
-    const playPauseText = new TextBlock();
-    playPauseText.color = "white";
+    const onPlayPauseClick = () => {
+      if (videoTexture.video.paused) {
+        playPauseBtn[1].text = "PAUSE";
+        videoTexture.video.play();
+        animationGroup.play(true);
+      } else {
+        playPauseBtn[1].text = "PLAY";
+        videoTexture.video.pause();
+        animationGroup.pause();
+      }
+    };
+    const playPauseBtn = CreateButton("PLAY", vidBtnWidth, vidBtnHeight, onPlayPauseClick)
+    playPauseBtn[0].position = videoPlane.position.clone();
+    playPauseBtn[0].position.y += videoHeight / 2 + vidBtnHeight / 4;
     
-    playPauseText.outlineColor = "black";
-    playPauseText.outlineWidth = 20;
-    playPauseText.fontSize = 150;
-    playPauseText.fontFamily = "Bold Arial";
-    playPauseText.text = "PLAY";
-    playPauseTexture.addControl(playPauseText);
-    playPauseBtn.position = videoPlane.position.clone();
-    playPauseBtn.position.y += videoHeight / 2 + playBtnHeight / 4;
+    //Increase/Decrease Video Scaling button
+    var currentScaling = 1
+
+    const onPlusClick = () => {
+        if(currentScaling < 5)
+        {
+          currentScaling += 0.5
+          videoPlane.scaling.setAll(currentScaling)
+        }
+    };
+    const onMinusClick = () => {
+      if(currentScaling > 1)
+      {
+        currentScaling -= 0.5
+        videoPlane.scaling.setAll(currentScaling)
+      }
+    };
+    const plusPosition = playPauseBtn[0].position.clone().add(new Vector3(-videoBorderWidth / 2 + 0.53, 0, 0))
+    const plusBtn = CreateButton("+", vidBtnWidth, vidBtnHeight, onPlusClick, plusPosition, true)
+    
+    const minusPosition = plusPosition.add(new Vector3( -0.1, 0, 0))
+    const minusBtn = CreateButton("-", vidBtnWidth, vidBtnHeight, onMinusClick, minusPosition, true)
 
     videoPlane.position.y += -videoBorderWidth;
     videoBorderPlane.setParent(videoPlane);
-    playPauseBtn.setParent(videoPlane);
+    playPauseBtn[0].setParent(videoPlane);
+    plusBtn[0].setParent(videoPlane);
+    minusBtn[0].setParent(videoPlane);
     videoPlane.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
 
     //Video Controller
@@ -513,30 +585,18 @@ export class XRScene {
       "xrauthor animation group",
       scene
     );
-    scene.onPointerObservable.add((evtData) => {
-      if (evtData.pickInfo.pickedMesh === playPauseBtn) {
-        if (videoTexture.video.paused) {
-          playPauseText.text = "PAUSE";
-          videoTexture.video.play();
-          animationGroup.play(true);
-        } else {
-          playPauseText.text = "PLAY";
-          videoTexture.video.pause();
-          animationGroup.pause();
-        }
-      }
-    }, PointerEventTypes.POINTERPICK);
-
+    
     //XRAuthor Animation
     const tracks = this.authorData.recordingData.animation.tracks;
-    const allMol =  this.moleculeMg.getAllMolecules()
+    const allMol = this.moleculeMg.getAllMolecules();
     for (let id in tracks) {
       const track = this.authorData.recordingData.animation.tracks[id];
       const length = track.times.length;
       const fps = length / this.authorData.recordingData.animation.duration;
 
       const depth = Math.abs(videoPlane.position.z) - 0.05;
-      const scaleForDepth = depth / this.authorData.recordingData.videoPlaneDepth;
+      const scaleForDepth =
+        depth / this.authorData.recordingData.videoPlaneDepth;
       const fov = (this.authorData.recordingData.fovInDegrees * Math.PI) / 180;
       const videoHeightFromRecordingAfterDepthScaling =
         Math.tan(fov / 2) * depth * 2;
@@ -569,14 +629,12 @@ export class XRScene {
       const info = this.authorData.recordingData.modelInfo[id];
       const strIndex = info.name.lastIndexOf(".");
       const moleculeName = info.name.substring(0, strIndex);
-      for(let i = 0; i < allMol.length; ++i)
-      {
-        if(allMol[i].label.textBlock.text === moleculeName)
-        {
+      for (let i = 0; i < allMol.length; ++i) {
+        if (allMol[i].label.textBlock.text === moleculeName) {
           const clonedMol = this.moleculeMg.cloneMesh(allMol[i]);
-          clonedMol.rotation = Vector3.Zero()
+          clonedMol.rotation = Vector3.Zero();
           clonedMol.rotate(Vector3.Up(), -Math.PI * 0.5, Space.LOCAL);
-          clonedMol.setParent(videoPlane)
+          clonedMol.setParent(videoPlane);
 
           animationGroup.addTargetedAnimation(animation, clonedMol);
           animationGroup.reset();
@@ -584,7 +642,5 @@ export class XRScene {
         }
       }
     }
-
-    // videoPlane.scaling.setAll(5)
   }
 }
