@@ -38,9 +38,6 @@ module.exports = {
             patterns: [
                 { 
                     from: path.resolve(__dirname, 'public'),
-                    // globOptions:{
-                    //     ignore: ['**/test/**']
-                    // }
                 }
 
             ]

@@ -53,7 +53,7 @@ export class Collision {
         //Grab mesh
         if (pickResult.hit) {
           //GLOBAL.print("Picking: " + pickResult.pickedMesh.parent);
-          if (pickResult.pickedMesh.name.indexOf("Molecule") !== -1) {
+          if (pickResult.pickedMesh.name.indexOf("Molecule") !== -1 && pickResult.pickedMesh.name.indexOf("clone") === -1) {
             //Disabling Camera
             xrScene.sceneCam.camera.detachControl();
             pickingAction(pickResult.pickedMesh, parentMesh);
@@ -89,7 +89,7 @@ export class Collision {
             ) {
               GLOBAL.print("mesh under controllerx pointer: " + pickMesh);
               // only allow picking if its a molecule
-              if (pickMesh.name.indexOf("Molecule") !== -1) {
+              if (pickMesh.name.indexOf("Molecule") !== -1 && pickMesh.name.indexOf("clone") === -1 ) {
                 const distance = Vector3.Distance(
                   motionController.rootMesh.getAbsolutePosition(),
                   pickMesh.getAbsolutePosition()

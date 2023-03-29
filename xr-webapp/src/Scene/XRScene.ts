@@ -92,8 +92,6 @@ export class XRScene {
     this.LoadMolecules();
     this.CreateReactionUI();
     
-    //XRAuthor Video
-    this.CreateXRAuthorVideo(0.82, new Vector3(7.15, 1.51, 0), this.scene);
   }
 
   OnUpdate() {
@@ -179,8 +177,10 @@ export class XRScene {
     //load molecules
     const moleculesReactants = ["C.glb", "H2.glb", "O2.glb"];
     const moleculesResults = ["C6H6.glb", "CO2.glb"];
+    let totalSize : number = moleculesReactants.length + moleculesResults.length
 
     let zReactant: number = 0.3;
+    let xrAuthorLoaded = false
     moleculesReactants.forEach((filePath) => {
       SceneLoader.ImportMeshAsync("", "models/", filePath).then((result) => {
         result.meshes.forEach((mesh) => {
@@ -212,8 +212,17 @@ export class XRScene {
             });
             //add the molecule to the manager as master molecule object
             this.moleculeMg.pushReactants(m);
+
+            totalSize--;
           }
         });
+
+        if(totalSize <= 0 && !xrAuthorLoaded)
+        {
+          //XRAuthor Video
+          this.CreateXRAuthorVideo(0.82, new Vector3(7.15, 1.51, 0), this.scene);
+          xrAuthorLoaded = true
+        }
       });
     });
 
@@ -251,9 +260,18 @@ export class XRScene {
             });
             //mesh.setEnabled(false);
             this.moleculeMg.pushReactions(m);
+
+            totalSize--;
           }
         });
+        if(totalSize <= 0 && !xrAuthorLoaded)
+        {
+          //XRAuthor Video
+          this.CreateXRAuthorVideo(0.82, new Vector3(7.15, 1.51, 0), this.scene);
+          xrAuthorLoaded = true
+        }
       });
+      
     });
   }
 
@@ -433,7 +451,7 @@ export class XRScene {
 
     //Video Border
     const videoBorderWidth = videoHeight / 20;
-    const videoBorderHeight = videoHeight / 8;
+    const videoBorderHeight = videoHeight / 5;
     const videoBorderPlane = MeshBuilder.CreatePlane(
       "xrauthorBorderPlane",
       {
@@ -445,12 +463,13 @@ export class XRScene {
     videoBorderPlane.position = videoPlane.position.clone();
     videoBorderPlane.position.z += 0.001
     var borderMat = new StandardMaterial("borderMat", scene);
-    borderMat.emissiveColor = Color3.White();
+    borderMat.emissiveColor = Color3.Gray();
+    borderMat.diffuseColor = Color3.Gray();
     borderMat.backFaceCulling = false; // disable backface culling
     videoBorderPlane.material = borderMat;
 
     //Video Play/Pause Button
-    const playBtnWidth = videoBorderWidth * 3
+    const playBtnWidth = videoBorderWidth * 4
     const playBtnHeight = videoBorderHeight / 2
     const playPauseBtn = MeshBuilder.CreatePlane(
       "playPauseplane",
@@ -459,21 +478,25 @@ export class XRScene {
     );
     const playPauseTexture = AdvancedDynamicTexture.CreateForMesh(
       playPauseBtn,
-      300,
-      100,
+      500,
+      200,
       false
     );
     playPauseTexture.name = "playPauseTexture";
-    playPauseTexture.background = "black";
+    playPauseTexture.background = "grey";
     const playPauseText = new TextBlock();
     playPauseText.color = "white";
-    playPauseText.fontSize = 60;
+    
+    playPauseText.outlineColor = "black";
+    playPauseText.outlineWidth = 20;
+    playPauseText.fontSize = 150;
+    playPauseText.fontFamily = "Bold Arial";
     playPauseText.text = "PLAY";
     playPauseTexture.addControl(playPauseText);
     playPauseBtn.position = videoPlane.position.clone();
     playPauseBtn.position.y += videoHeight / 2 + playBtnHeight / 4;
 
-    videoPlane.position.y += -videoBorderWidth / 2;
+    videoPlane.position.y += -videoBorderWidth;
     videoBorderPlane.setParent(videoPlane);
     playPauseBtn.setParent(videoPlane);
     videoPlane.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
@@ -500,12 +523,13 @@ export class XRScene {
 
     //XRAuthor Animation
     const tracks = this.authorData.recordingData.animation.tracks;
+    const allMol =  this.moleculeMg.getAllMolecules()
     for (let id in tracks) {
       const track = this.authorData.recordingData.animation.tracks[id];
       const length = track.times.length;
       const fps = length / this.authorData.recordingData.animation.duration;
 
-      const depth = Math.abs(videoPlane.position.z) - 0.4;
+      const depth = Math.abs(videoPlane.position.z) - 0.05;
       const scaleForDepth = depth / this.authorData.recordingData.videoPlaneDepth;
       const fov = (this.authorData.recordingData.fovInDegrees * Math.PI) / 180;
       const videoHeightFromRecordingAfterDepthScaling =
@@ -537,50 +561,24 @@ export class XRScene {
 
       //Loading Models from XRAuthor Video
       const info = this.authorData.recordingData.modelInfo[id];
-      const label = info.label;
-      const name = info.name;
-      const url = this.authorData.models[name];
-      console.log(url)
+      const strIndex = info.name.lastIndexOf(".");
+      const moleculeName = info.name.substring(0, strIndex);
+      for(let i = 0; i < allMol.length; ++i)
+      {
+        if(allMol[i].label.textBlock.text === moleculeName)
+        {
+          const clonedMol = this.moleculeMg.cloneMesh(allMol[i]);
+          clonedMol.rotation = Vector3.Zero()
+          clonedMol.rotate(Vector3.Up(), -Math.PI * 0.5, Space.LOCAL);
+          clonedMol.setParent(videoPlane)
 
-      //Model Label
-      const labelPlane = MeshBuilder.CreatePlane(
-        "label plane " + id,
-        { width: 2.5, height: 1 },
-        scene
-      );
-      const labelTexture = AdvancedDynamicTexture.CreateForMesh(
-        labelPlane,
-        250,
-        100,
-        false
-      );
-      labelTexture.name = "label texture " + id;
-      const labelText = new TextBlock();
-      labelText.color = "purple";
-      labelText.fontSize = 100;
-      labelTexture.addControl(labelText);
-
-      SceneLoader.AppendAsync(url, undefined, scene, undefined, ".glb").then(
-        (result) => {
-          const root = result.getMeshById("__root__");
-          root.id = id + ": " + label;
-          root.name = label;
-          root.scaling.setAll(2);
-          root.setParent(videoPlane);
-          //root.rotate(axis, angle, BABYLON.Space.WORLD);
-
-          //Label text
-          labelPlane.position.setAll(0);
-          labelPlane.setParent(root);
-          labelPlane.position.y += -0.8;
-          labelPlane.position.z += -0.1;
-          //labelPlane.rotate(axis, angle, BABYLON.Space.WORLD);
-          labelText.text = label;
-
-          animationGroup.addTargetedAnimation(animation, root);
+          animationGroup.addTargetedAnimation(animation, clonedMol);
           animationGroup.reset();
+          break;
         }
-      );
+      }
     }
+
+    // videoPlane.scaling.setAll(5)
   }
 }

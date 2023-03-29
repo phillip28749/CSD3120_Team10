@@ -25,7 +25,7 @@ module.exports = {
                 {
                     from: path.resolve(__dirname, 'public'),
                     globOptions:{
-                        ignore: ['**/test/**']
+                        ignore: ['**/synthesis/**']
                     }
                 }
             ]
