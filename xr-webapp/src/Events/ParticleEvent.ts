@@ -23,7 +23,7 @@ export class ParticleEvent
     {
         var particleSystem = new ParticleSystem("particles", 2000, scene);
 
-        particleSystem.particleTexture = new Texture("textures/flare.png", scene);
+        particleSystem.particleTexture = new Texture("textures/arrow.png", scene);
 
         particleSystem.color1 = new Color4(0.7, 0.8, 1.0, 1.0);
         particleSystem.color2 = new Color4(0.2, 0.5, 1.0, 1.0);

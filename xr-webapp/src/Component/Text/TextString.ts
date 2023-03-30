@@ -33,6 +33,6 @@ export class TextString extends TransformNode
         texture.addControl(this.textBlock);
         this.textPlane.setParent(this);    
 
-        this.position = textOptions.position?? Vector3.Zero()
+        this.position = textOptions?.position?? Vector3.Zero()
     }
 }

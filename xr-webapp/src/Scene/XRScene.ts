@@ -15,6 +15,7 @@ import {
   PointerEventTypes,
   Scene,
   SceneLoader,
+  Sound,
   Space,
   StandardMaterial,
   Texture,
@@ -30,6 +31,7 @@ import {
   ReactionZone,
   DisplayPanel,
   MoleculeInZone,
+  Indicator,
 } from "../Component/index";
 import { SceneCamera } from "../Camera/SceneCamera";
 import { ParticleEvent } from "../Events/index";
@@ -59,6 +61,9 @@ export class XRScene {
   public set moleculeMg(value: MoleculeManager) {
     this._moleculeMg = value;
   }
+
+  grabIndicator : Indicator
+  reactIndicator : Indicator
 
   reactionParent: AbstractMesh;
   reactionBtn: SceneButton;
@@ -99,11 +104,27 @@ export class XRScene {
     this.LoadEnvironment();
     this.LoadMolecules();
     this.CreateReactionUI();
+    this.CreateIndicators()
+    this.AddSounds();
+  }
+
+  AddSounds() {
+    const music = new Sound(
+      "music",
+       "/sounds/bgm.m4a",
+      this.scene,
+      null,
+      {
+        loop: true,
+        autoplay: true,
+      }
+    );
   }
 
   SetLocomotion(locomotion: Locomotion) {
     this.locomotion = locomotion;
   }
+
   OnUpdate() {
     switch (this.moleculeMg.molInZone) {
       case MoleculeInZone.Reactant: {
@@ -433,6 +454,12 @@ export class XRScene {
     this.CreateReactionPanel();
     this.CreateReactionBtns();
     this.reactionParent.position = new Vector3(5.85, 0.83, -0.33);
+  }
+
+  CreateIndicators()
+  {
+    this.grabIndicator = new Indicator("grabIndicator", this.scene, new Vector3(5.85, 0.83, -0.33))
+    //console.log("indicator " + this.grabIndicator.name)
   }
 
   CreateXRAuthorVideo(videoHeight: number, position: Vector3, scene: Scene) {

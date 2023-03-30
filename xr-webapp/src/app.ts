@@ -93,33 +93,21 @@ export class App {
       width: 40,
       height: 30,
     });
-    ground.position.y = -1.0;
+    ground.position.y = -0;
     ground.material = groundMat;
     
-    var tpMat = new StandardMaterial("tpGroundMat", scene);
-    // tpMat.emissiveColor = new Color3(0.5, 0.5, 0.5);
-    tpMat.alpha = 0
-    const tpGround = MeshBuilder.CreateGround("teleportationGround", {
-      width: 40,
-      height: 30,
-    });
-    tpGround.position.y = -0.3;
-    tpGround.material = tpMat;
-
-    //var ground = this.scene.getMeshByName("ground");
-    //GLOBAL.print("found:" + ground.name);
     this.xrScene.xrPromise = scene.createDefaultXRExperienceAsync({
       uiOptions: {
         sessionMode: "immersive-vr",
       },
-      floorMeshes: [tpGround],
+      floorMeshes: [ground],
     });
 
     this.xrScene.xrPromise.then((xr) => {
       xr.baseExperience.camera.setTransformationFromNonVRCamera(nonVRcamera);
       const featureManager = xr.baseExperience.featuresManager;
       //locomotion
-      this.locomotion = new Locomotion(xr, featureManager, tpGround);
+      this.locomotion = new Locomotion(xr, featureManager, ground);
       this.xrScene.SetLocomotion(this.locomotion)
     });
 
