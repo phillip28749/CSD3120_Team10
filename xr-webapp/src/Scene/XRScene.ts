@@ -282,7 +282,7 @@ export class XRScene {
             //both are consider part of molecule id
             m.uniqueIds.push(m.label.plane.uniqueId, mesh.uniqueId);
 
-            m.mesh.position = new Vector3(5.9, 0.85, zReaction);
+            m.mesh.position = new Vector3(5.9, 0.88, zReaction);
             m.mesh.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
             m.mesh.rotate(Vector3.Left(), Math.PI * 0.5, Space.LOCAL);
             m.mesh.scaling = new Vector3(0.08, 0.08, 0.08);
@@ -321,14 +321,13 @@ export class XRScene {
     //Reset Reactions
     const onResetClick = () => {
       GLOBAL.print("Reset clicked");
-      if(this.dropTutDone && !this.breakTutDone)
-        {
-          this.dropTutDone = false
-          this.grabTutDone = false;
-          this.grabIndicator.Show();
-          this.reactIndicator.Hide();
-          this.breakIndicator.Hide();
-        }
+      if (this.dropTutDone && !this.breakTutDone) {
+        this.dropTutDone = false;
+        this.grabTutDone = false;
+        this.grabIndicator.Show();
+        this.reactIndicator.Hide();
+        this.breakIndicator.Hide();
+      }
       this.moleculeMg.ResetReactList();
     };
     this.reactionResetBtn = new SceneButton(
@@ -378,11 +377,10 @@ export class XRScene {
           break;
         }
         case MoleculeInZone.Reaction: {
-          if(!this.breakTutDone && this.dropTutDone)
-          {
-            this.breakTutDone = true
-            this.breakIndicator.Hide()
-            this.observeIndicator.Show()
+          if (!this.breakTutDone && this.dropTutDone) {
+            this.breakTutDone = true;
+            this.breakIndicator.Hide();
+            this.observeIndicator.Show();
 
             setTimeout(() => {
               this.observeTutDone = true;
@@ -394,9 +392,9 @@ export class XRScene {
                 this.finalTutDone = true;
                 this.reactantsIndicator.Hide();
                 this.reactionsIndicator.Hide();
-              },5000)
-            }, 5000);
-            
+              }, 5000);
+
+            }, 3000);
           }
 
           GLOBAL.print("Break clicked");
@@ -490,39 +488,6 @@ export class XRScene {
   CreateIndicators() {
     const outlineWidth = 10;
 
-    let reactionPointerY = 0.87;
-    const reactantList = this.moleculeMg.getAllReactants();
-    for (let i = 0; i < reactantList.length; ++i) {
-      if (reactantList[i].label.textBlock.text === "C") {
-        let pos = reactantList[i].mesh.getAbsolutePosition();
-
-        //Reactant indicator
-        this.reactantsIndicator = new Indicator(
-          "reactantsIndicator",
-          this.scene,
-          new Vector3(pos.x - 0.07, reactionPointerY, pos.z + 0.25),
-          { color: Color3.Gray() },
-          { text: "REACTANTS", color: "orange", outlineWidth: outlineWidth }
-        );
-        this.reactantsIndicator.rotate(
-          Vector3.Up(),
-          -Math.PI * 0.5,
-          Space.LOCAL
-        );
-        this.reactantsIndicator.rotate(
-          Vector3.Right(),
-          Math.PI * 0.5,
-          Space.LOCAL
-        );
-        this.reactantsIndicator.rotate(
-          Vector3.Forward(),
-          Math.PI * 0.15,
-          Space.LOCAL
-        );
-        break;
-      }
-    }
-
     const reactionList = this.moleculeMg.getAllReactions();
     for (let i = 0; i < reactionList.length; ++i) {
       if (reactionList[i].label.textBlock.text === "CO2") {
@@ -535,34 +500,47 @@ export class XRScene {
           { color: Color3.Gray() },
           { text: "GRAB CO2", color: "orange", outlineWidth: outlineWidth }
         );
-        this.grabIndicator.Show()
-
-        //Reactions indicator
-        this.reactionsIndicator = new Indicator(
-          "reactionsIndicator",
-          this.scene,
-          new Vector3(pos.x + 0.07, reactionPointerY, pos.z + 0.3),
-          { color: Color3.Gray() },
-          { text: "REACTIONS", color: "orange", outlineWidth: outlineWidth }
-        );
-        this.reactionsIndicator.rotate(
-          Vector3.Up(),
-          -Math.PI * 0.5,
-          Space.LOCAL
-        );
-        this.reactionsIndicator.rotate(
-          Vector3.Right(),
-          Math.PI * 0.5,
-          Space.LOCAL
-        );
-        this.reactionsIndicator.rotate(
-          Vector3.Forward(),
-          -Math.PI * 0.15,
-          Space.LOCAL
-        );
+        this.grabIndicator.Show();
         break;
       }
     }
+
+    let reactionPointerX = 5.97;
+    let reactionPointerY = 0.87;
+    let reactionPointerZ = 0.55;
+    let reactantPointerX = 5.63;
+    const reactantList = this.moleculeMg.getAllReactants();
+    //Reactant indicator
+    this.reactantsIndicator = new Indicator(
+      "reactantsIndicator",
+      this.scene,
+      new Vector3(reactantPointerX, reactionPointerY, reactionPointerZ),
+      { color: Color3.Gray() },
+      { text: "REACTANTS", color: "orange", outlineWidth: outlineWidth }
+    );
+    this.reactantsIndicator.rotate(Vector3.Up(), -Math.PI * 0.5, Space.LOCAL);
+    this.reactantsIndicator.rotate(Vector3.Right(), Math.PI * 0.5, Space.LOCAL);
+    this.reactantsIndicator.rotate(
+      Vector3.Forward(),
+      Math.PI * 0.15,
+      Space.LOCAL
+    );
+
+    //Reactions indicator
+    this.reactionsIndicator = new Indicator(
+      "reactionsIndicator",
+      this.scene,
+      new Vector3(reactionPointerX, reactionPointerY, reactionPointerZ),
+      { color: Color3.Gray() },
+      { text: "REACTIONS", color: "orange", outlineWidth: outlineWidth }
+    );
+    this.reactionsIndicator.rotate(Vector3.Up(), -Math.PI * 0.5, Space.LOCAL);
+    this.reactionsIndicator.rotate(Vector3.Right(), Math.PI * 0.5, Space.LOCAL);
+    this.reactionsIndicator.rotate(
+      Vector3.Forward(),
+      -Math.PI * 0.15,
+      Space.LOCAL
+    );
 
     //Drop into reaction zone
     let reactPos = this.reactionZone.getAbsolutePosition();
@@ -759,9 +737,9 @@ export class XRScene {
       true
     );
 
-    const offsetLimit = 3
-    var maxOffsetLimit = videoPlane.position.x
-    var minOffsetLimit = videoPlane.position.x - offsetLimit
+    const offsetLimit = 3;
+    var maxOffsetLimit = videoPlane.position.x;
+    var minOffsetLimit = videoPlane.position.x - offsetLimit;
     const onUpClick = () => {
       if (videoPlane.position.x > minOffsetLimit) {
         videoPlane.position.x -= 1;
