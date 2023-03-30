@@ -496,7 +496,6 @@ export class XRScene {
       if (reactantList[i].label.textBlock.text === "C") {
         let pos = reactantList[i].mesh.getAbsolutePosition();
 
-        console.log("pos " + pos);
         //Reactant indicator
         this.reactantsIndicator = new Indicator(
           "reactantsIndicator",
@@ -726,7 +725,7 @@ export class XRScene {
     var currentScaling = 1;
 
     const onPlusClick = () => {
-      if (currentScaling < 5) {
+      if (currentScaling < 3) {
         currentScaling += 0.5;
         videoPlane.scaling.setAll(currentScaling);
       }
@@ -737,9 +736,10 @@ export class XRScene {
         videoPlane.scaling.setAll(currentScaling);
       }
     };
+
     const plusPosition = playPauseBtn[0].position
       .clone()
-      .add(new Vector3(-videoBorderWidth / 2 + 0.53, 0, 0));
+      .add(new Vector3(0.53, 0, 0));
     const plusBtn = CreateButton(
       "+",
       vidBtnWidth,
@@ -759,11 +759,49 @@ export class XRScene {
       true
     );
 
+    const offsetLimit = 3
+    var maxOffsetLimit = videoPlane.position.x
+    var minOffsetLimit = videoPlane.position.x - offsetLimit
+    const onUpClick = () => {
+      if (videoPlane.position.x > minOffsetLimit) {
+        videoPlane.position.x -= 1;
+      }
+    };
+    const onDownClick = () => {
+      if (videoPlane.position.x < maxOffsetLimit) {
+        videoPlane.position.x += 1;
+      }
+    };
+
+    const upPosition = playPauseBtn[0].position
+      .clone()
+      .add(new Vector3(-0.53, 0, 0));
+    const upBtn = CreateButton(
+      "↑",
+      vidBtnWidth,
+      vidBtnHeight,
+      onUpClick,
+      upPosition,
+      true
+    );
+
+    const downPosition = upPosition.add(new Vector3(0.1, 0, 0));
+    const downBtn = CreateButton(
+      "↓",
+      vidBtnWidth,
+      vidBtnHeight,
+      onDownClick,
+      downPosition,
+      true
+    );
+
     videoPlane.position.y += -videoBorderWidth;
     videoBorderPlane.setParent(videoPlane);
     playPauseBtn[0].setParent(videoPlane);
     plusBtn[0].setParent(videoPlane);
     minusBtn[0].setParent(videoPlane);
+    upBtn[0].setParent(videoPlane);
+    downBtn[0].setParent(videoPlane);
     videoPlane.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
 
     //Video Controller
