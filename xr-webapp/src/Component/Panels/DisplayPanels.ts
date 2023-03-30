@@ -67,6 +67,7 @@ export class DisplayPanel extends TransformNode {
     });
     this.panelPlane.material = this.panelMat;
     this.panelPlane.setParent(this);
+    this.panelPlane.isPickable = false;
 
     //Display Panel Properties
     this.position = position;

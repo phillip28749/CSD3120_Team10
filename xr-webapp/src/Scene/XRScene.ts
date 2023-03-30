@@ -32,6 +32,7 @@ import {
   DisplayPanel,
   MoleculeInZone,
   Indicator,
+  TextString,
 } from "../Component/index";
 import { SceneCamera } from "../Camera/SceneCamera";
 import { ParticleEvent } from "../Events/index";
@@ -62,14 +63,26 @@ export class XRScene {
     this._moleculeMg = value;
   }
 
-  grabIndicator : Indicator
-  reactIndicator : Indicator
+  grabIndicator: Indicator;
+  reactIndicator: Indicator;
+  breakIndicator: Indicator;
+  observeIndicator: Indicator;
+  reactantsIndicator: Indicator;
+  reactionsIndicator: Indicator;
 
   reactionParent: AbstractMesh;
   reactionBtn: SceneButton;
   reactionResetBtn: SceneButton;
   reactionZone: ReactionZone; // the mesh representation for the scene's reaction zone
   reactionPanel: DisplayPanel;
+
+  loadedOtherData: Boolean;
+
+  grabTutDone: Boolean; //Action based
+  dropTutDone: Boolean; //Action based
+  breakTutDone: Boolean; //Action based
+  observeTutDone: Boolean; //Time based
+  finalTutDone: Boolean; //Time based
 
   constructor(
     engine: Engine,
@@ -78,18 +91,18 @@ export class XRScene {
   ) {
     this.moleculeMg = new MoleculeManager(this);
 
-    this.reactionParent = null;
-    this.reactionBtn = null;
-    this.reactionResetBtn = null;
-    this.reactionPanel = null;
-    this.reactionZone = null;
-
     this.pickedMesh = null;
     this.canvas = canvas;
     this.authorData = authorData;
     this.scene = new Scene(engine);
     this.sceneCam = new SceneCamera(this.scene, this.canvas);
     this.locomotion = null;
+
+    this.loadedOtherData = false;
+    this.grabTutDone = false;
+    this.dropTutDone = false;
+    this.breakTutDone = false;
+    this.finalTutDone = false;
 
     if (GLOBAL.DEBUG_MODE) {
       //Position of the table
@@ -104,21 +117,14 @@ export class XRScene {
     this.LoadEnvironment();
     this.LoadMolecules();
     this.CreateReactionUI();
-    this.CreateIndicators()
     this.AddSounds();
   }
 
   AddSounds() {
-    const music = new Sound(
-      "music",
-       "/sounds/bgm.m4a",
-      this.scene,
-      null,
-      {
-        loop: true,
-        autoplay: true,
-      }
-    );
+    const music = new Sound("music", "/sounds/bgm.m4a", this.scene, null, {
+      loop: true,
+      autoplay: true,
+    });
   }
 
   SetLocomotion(locomotion: Locomotion) {
@@ -211,7 +217,6 @@ export class XRScene {
     let totalSize: number = moleculesReactants.length + moleculesResults.length;
 
     let zReactant: number = 0.3;
-    let xrAuthorLoaded = false;
     moleculesReactants.forEach((filePath) => {
       SceneLoader.ImportMeshAsync("", "models/", filePath).then((result) => {
         result.meshes.forEach((mesh) => {
@@ -248,14 +253,9 @@ export class XRScene {
           }
         });
 
-        if (totalSize <= 0 && !xrAuthorLoaded) {
-          //XRAuthor Video
-          this.CreateXRAuthorVideo(
-            0.82,
-            new Vector3(7.15, 1.51, 0),
-            this.scene
-          );
-          xrAuthorLoaded = true;
+        if (totalSize <= 0 && !this.loadedOtherData) {
+          this.AfterMoleculeLoaded();
+          this.loadedOtherData = true;
         }
       });
     });
@@ -298,17 +298,19 @@ export class XRScene {
             totalSize--;
           }
         });
-        if (totalSize <= 0 && !xrAuthorLoaded) {
-          //XRAuthor Video
-          this.CreateXRAuthorVideo(
-            0.82,
-            new Vector3(7.15, 1.51, 0),
-            this.scene
-          );
-          xrAuthorLoaded = true;
+
+        if (totalSize <= 0 && !this.loadedOtherData) {
+          this.AfterMoleculeLoaded();
+          this.loadedOtherData = true;
         }
       });
     });
+  }
+
+  AfterMoleculeLoaded() {
+    this.CreateXRAuthorVideo(0.82, new Vector3(7.15, 1.51, 0), this.scene);
+
+    this.CreateIndicators();
   }
 
   /**
@@ -319,6 +321,14 @@ export class XRScene {
     //Reset Reactions
     const onResetClick = () => {
       GLOBAL.print("Reset clicked");
+      if(this.dropTutDone && !this.breakTutDone)
+        {
+          this.dropTutDone = false
+          this.grabTutDone = false;
+          this.grabIndicator.Show();
+          this.reactIndicator.Hide();
+          this.breakIndicator.Hide();
+        }
       this.moleculeMg.ResetReactList();
     };
     this.reactionResetBtn = new SceneButton(
@@ -368,6 +378,27 @@ export class XRScene {
           break;
         }
         case MoleculeInZone.Reaction: {
+          if(!this.breakTutDone && this.dropTutDone)
+          {
+            this.breakTutDone = true
+            this.breakIndicator.Hide()
+            this.observeIndicator.Show()
+
+            setTimeout(() => {
+              this.observeTutDone = true;
+              this.observeIndicator.Hide();
+              this.reactantsIndicator.Show();
+              this.reactionsIndicator.Show();
+
+              setTimeout(() => {
+                this.finalTutDone = true;
+                this.reactantsIndicator.Hide();
+                this.reactionsIndicator.Hide();
+              },5000)
+            }, 5000);
+            
+          }
+
           GLOBAL.print("Break clicked");
 
           var xOffset: number = -1.6;
@@ -456,10 +487,114 @@ export class XRScene {
     this.reactionParent.position = new Vector3(5.85, 0.83, -0.33);
   }
 
-  CreateIndicators()
-  {
-    this.grabIndicator = new Indicator("grabIndicator", this.scene, new Vector3(5.85, 0.83, -0.33))
-    //console.log("indicator " + this.grabIndicator.name)
+  CreateIndicators() {
+    const outlineWidth = 10;
+
+    let reactionPointerY = 0.87;
+    const reactantList = this.moleculeMg.getAllReactants();
+    for (let i = 0; i < reactantList.length; ++i) {
+      if (reactantList[i].label.textBlock.text === "C") {
+        let pos = reactantList[i].mesh.getAbsolutePosition();
+
+        console.log("pos " + pos);
+        //Reactant indicator
+        this.reactantsIndicator = new Indicator(
+          "reactantsIndicator",
+          this.scene,
+          new Vector3(pos.x - 0.07, reactionPointerY, pos.z + 0.25),
+          { color: Color3.Gray() },
+          { text: "REACTANTS", color: "orange", outlineWidth: outlineWidth }
+        );
+        this.reactantsIndicator.rotate(
+          Vector3.Up(),
+          -Math.PI * 0.5,
+          Space.LOCAL
+        );
+        this.reactantsIndicator.rotate(
+          Vector3.Right(),
+          Math.PI * 0.5,
+          Space.LOCAL
+        );
+        this.reactantsIndicator.rotate(
+          Vector3.Forward(),
+          Math.PI * 0.15,
+          Space.LOCAL
+        );
+        break;
+      }
+    }
+
+    const reactionList = this.moleculeMg.getAllReactions();
+    for (let i = 0; i < reactionList.length; ++i) {
+      if (reactionList[i].label.textBlock.text === "CO2") {
+        //Grab CO2
+        let pos = reactionList[i].mesh.getAbsolutePosition();
+        this.grabIndicator = new Indicator(
+          "grabIndicator",
+          this.scene,
+          new Vector3(pos.x, pos.y + 0.3, pos.z),
+          { color: Color3.Gray() },
+          { text: "GRAB CO2", color: "orange", outlineWidth: outlineWidth }
+        );
+        this.grabIndicator.Show()
+
+        //Reactions indicator
+        this.reactionsIndicator = new Indicator(
+          "reactionsIndicator",
+          this.scene,
+          new Vector3(pos.x + 0.07, reactionPointerY, pos.z + 0.3),
+          { color: Color3.Gray() },
+          { text: "REACTIONS", color: "orange", outlineWidth: outlineWidth }
+        );
+        this.reactionsIndicator.rotate(
+          Vector3.Up(),
+          -Math.PI * 0.5,
+          Space.LOCAL
+        );
+        this.reactionsIndicator.rotate(
+          Vector3.Right(),
+          Math.PI * 0.5,
+          Space.LOCAL
+        );
+        this.reactionsIndicator.rotate(
+          Vector3.Forward(),
+          -Math.PI * 0.15,
+          Space.LOCAL
+        );
+        break;
+      }
+    }
+
+    //Drop into reaction zone
+    let reactPos = this.reactionZone.getAbsolutePosition();
+    this.reactIndicator = new Indicator(
+      "reactIndicator",
+      this.scene,
+      new Vector3(reactPos.x, reactPos.y + 0.3, reactPos.z),
+      { color: Color3.Gray() },
+      { text: "DROP HERE", color: "orange", outlineWidth: outlineWidth }
+    );
+
+    //Break Molecule
+    let breakPos = this.reactionBtn.getAbsolutePosition();
+    this.breakIndicator = new Indicator(
+      "breakIndicator",
+      this.scene,
+      new Vector3(breakPos.x, breakPos.y + 0.3, breakPos.z),
+      { color: Color3.Gray() },
+      { text: "PRESS BUTTON", color: "orange", outlineWidth: outlineWidth }
+    );
+
+    //Observe Molecule
+    let observePos = this.reactionPanel.getAbsolutePosition();
+    this.observeIndicator = new Indicator(
+      "observeIndicator",
+      this.scene,
+      new Vector3(observePos.x, observePos.y + 0.35, observePos.z),
+      { color: Color3.Gray() },
+      { text: "OBSERVE REACTION", color: "orange", outlineWidth: outlineWidth }
+    );
+    this.observeIndicator.indText.textBlock.textWrapping = false;
   }
 
   CreateXRAuthorVideo(videoHeight: number, position: Vector3, scene: Scene) {
@@ -507,7 +642,14 @@ export class XRScene {
     videoBorderPlane.material = borderMat;
 
     //Video Buttons
-    const CreateButton = (text: string, btnWidth: number, btnHeight: number, triggerCB: () => void,  position?: Vector3, isTransparentBG: Boolean = false) : [Mesh, TextBlock] => {
+    const CreateButton = (
+      text: string,
+      btnWidth: number,
+      btnHeight: number,
+      triggerCB: () => void,
+      position?: Vector3,
+      isTransparentBG: Boolean = false
+    ): [Mesh, TextBlock] => {
       //Video Play/Pause Button
       const newBtn = MeshBuilder.CreatePlane(
         "btnPlane",
@@ -521,7 +663,7 @@ export class XRScene {
         false
       );
       btnTexture.name = "btnTexture";
-      if(!isTransparentBG) btnTexture.background = "grey";
+      if (!isTransparentBG) btnTexture.background = "grey";
 
       const btnText = new TextBlock();
       btnText.color = "white";
@@ -532,21 +674,20 @@ export class XRScene {
       btnText.fontFamily = "Bold Arial";
       btnText.text = text;
       btnTexture.addControl(btnText);
-      newBtn.position = position?? Vector3.Zero()
+      newBtn.position = position ?? Vector3.Zero();
 
-        
       // create an action to handle the click event
       const clickDownAction = new ExecuteCodeAction(
         ActionManager.OnPickDownTrigger,
         () => {
-          this.locomotion.disableTeleport()
-          triggerCB()
+          this.locomotion.disableTeleport();
+          triggerCB();
         }
       );
       const clickUpAction = new ExecuteCodeAction(
         ActionManager.OnPickUpTrigger,
         () => {
-          this.locomotion.enableTeleport()
+          this.locomotion.enableTeleport();
         }
       );
       // add the click action to the actionManager
@@ -554,7 +695,7 @@ export class XRScene {
       newBtn.actionManager.registerAction(clickDownAction);
       newBtn.actionManager.registerAction(clickUpAction);
 
-      return [newBtn, btnText]
+      return [newBtn, btnText];
     };
 
     const vidBtnWidth = videoBorderWidth * 4;
@@ -572,32 +713,51 @@ export class XRScene {
         animationGroup.pause();
       }
     };
-    const playPauseBtn = CreateButton("PLAY", vidBtnWidth, vidBtnHeight, onPlayPauseClick)
+    const playPauseBtn = CreateButton(
+      "PLAY",
+      vidBtnWidth,
+      vidBtnHeight,
+      onPlayPauseClick
+    );
     playPauseBtn[0].position = videoPlane.position.clone();
     playPauseBtn[0].position.y += videoHeight / 2 + vidBtnHeight / 4;
-    
+
     //Increase/Decrease Video Scaling button
-    var currentScaling = 1
+    var currentScaling = 1;
 
     const onPlusClick = () => {
-        if(currentScaling < 5)
-        {
-          currentScaling += 0.5
-          videoPlane.scaling.setAll(currentScaling)
-        }
-    };
-    const onMinusClick = () => {
-      if(currentScaling > 1)
-      {
-        currentScaling -= 0.5
-        videoPlane.scaling.setAll(currentScaling)
+      if (currentScaling < 5) {
+        currentScaling += 0.5;
+        videoPlane.scaling.setAll(currentScaling);
       }
     };
-    const plusPosition = playPauseBtn[0].position.clone().add(new Vector3(-videoBorderWidth / 2 + 0.53, 0, 0))
-    const plusBtn = CreateButton("+", vidBtnWidth, vidBtnHeight, onPlusClick, plusPosition, true)
-    
-    const minusPosition = plusPosition.add(new Vector3( -0.1, 0, 0))
-    const minusBtn = CreateButton("-", vidBtnWidth, vidBtnHeight, onMinusClick, minusPosition, true)
+    const onMinusClick = () => {
+      if (currentScaling > 1) {
+        currentScaling -= 0.5;
+        videoPlane.scaling.setAll(currentScaling);
+      }
+    };
+    const plusPosition = playPauseBtn[0].position
+      .clone()
+      .add(new Vector3(-videoBorderWidth / 2 + 0.53, 0, 0));
+    const plusBtn = CreateButton(
+      "+",
+      vidBtnWidth,
+      vidBtnHeight,
+      onPlusClick,
+      plusPosition,
+      true
+    );
+
+    const minusPosition = plusPosition.add(new Vector3(-0.1, 0, 0));
+    const minusBtn = CreateButton(
+      "-",
+      vidBtnWidth,
+      vidBtnHeight,
+      onMinusClick,
+      minusPosition,
+      true
+    );
 
     videoPlane.position.y += -videoBorderWidth;
     videoBorderPlane.setParent(videoPlane);
@@ -612,7 +772,7 @@ export class XRScene {
       "xrauthor animation group",
       scene
     );
-    
+
     //XRAuthor Animation
     const tracks = this.authorData.recordingData.animation.tracks;
     const allMol = this.moleculeMg.getAllMolecules();

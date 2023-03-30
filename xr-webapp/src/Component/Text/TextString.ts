@@ -31,7 +31,8 @@ export class TextString extends TransformNode
         this.textBlock.textVerticalAlignment = TextBlock.VERTICAL_ALIGNMENT_CENTER;
         this.textBlock.textWrapping = textOptions?.wordWarp?? true;
         texture.addControl(this.textBlock);
-        this.textPlane.setParent(this);    
+        this.textPlane.setParent(this);  
+        this.textPlane.isPickable = false;  
 
         this.position = textOptions?.position?? Vector3.Zero()
     }

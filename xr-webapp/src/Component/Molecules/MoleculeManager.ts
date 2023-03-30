@@ -333,13 +333,17 @@ export class MoleculeManager {
    *          The cloned molecule's mesh
    */
   cloneMesh(m: Molecule): Nullable<AbstractMesh> {
-    return m.mesh.clone(m.mesh.name + "_clone", null);
+    let clonedMesh = m.mesh.clone(m.mesh.name + "_clone", null);
+    clonedMesh.isPickable = false;
+    return clonedMesh;
   }
 
   cloneMolecule(m: Molecule): Nullable<Molecule> {
-    return new Molecule(
+    let clonedMol = new Molecule(
       m.name + "_clone",
       m.mesh.clone(m.mesh.name + "_clone", null)
     );
+    clonedMol.mesh.isPickable = false;
+    return clonedMol;
   }
 }

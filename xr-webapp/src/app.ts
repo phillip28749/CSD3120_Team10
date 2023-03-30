@@ -93,7 +93,7 @@ export class App {
       width: 40,
       height: 30,
     });
-    ground.position.y = -0;
+    ground.position.y = -0.001;
     ground.material = groundMat;
     
     this.xrScene.xrPromise = scene.createDefaultXRExperienceAsync({

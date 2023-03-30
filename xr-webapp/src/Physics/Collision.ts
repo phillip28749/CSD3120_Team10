@@ -1,4 +1,9 @@
-import { AbstractMesh, Vector3, WebXRDefaultExperience, WebXRFeatureName } from "babylonjs";
+import {
+  AbstractMesh,
+  Vector3,
+  WebXRDefaultExperience,
+  WebXRFeatureName,
+} from "babylonjs";
 import { XRScene } from "../Scene/XRScene";
 import { GLOBAL } from "../Global";
 
@@ -11,6 +16,20 @@ export class Collision {
       // make sure we can only pick reactants
       let m = xrScene.moleculeMg.findMolecule(pickedMesh.uniqueId);
       if (m) {
+        if (!xrScene.grabTutDone && m.label.textBlock.text === "CO2") {
+          xrScene.grabTutDone = true;
+          xrScene.grabIndicator.Hide();
+          xrScene.reactIndicator.Show();
+        }
+        else if(xrScene.dropTutDone && !xrScene.breakTutDone && m.label.textBlock.text !== "CO2")
+        {
+          xrScene.dropTutDone = false
+          xrScene.grabTutDone = false;
+          xrScene.grabIndicator.Show();
+          xrScene.reactIndicator.Hide();
+          xrScene.breakIndicator.Hide();
+        }
+
         xrScene.pickedMesh = xrScene.moleculeMg.cloneMesh(m); //clone the master mesh
         xrScene.pickedMesh.setParent(parentMesh, true); //set under parent controller's mesh
         //GLOBAL.print("picked mesh: " + xrScene.pickedMesh);
@@ -20,6 +39,12 @@ export class Collision {
     };
 
     const releaseAction = () => {
+      if (!xrScene.dropTutDone) {
+        xrScene.grabTutDone = false;
+        xrScene.grabIndicator.Show();
+        xrScene.reactIndicator.Hide();
+      }
+
       xrScene.pickedMesh?.setParent(null);
       //GLOBAL.print("destroying this mesh: " + xrScene.pickedMesh);
       xrScene.pickedMesh?.dispose();
@@ -52,7 +77,10 @@ export class Collision {
         //Grab mesh
         if (pickResult.hit) {
           //GLOBAL.print("Picking: " + pickResult.pickedMesh.parent);
-          if (pickResult.pickedMesh.name.indexOf("Molecule") !== -1 && pickResult.pickedMesh.name.indexOf("clone") === -1) {
+          if (
+            pickResult.pickedMesh.name.indexOf("Molecule") !== -1 &&
+            pickResult.pickedMesh.name.indexOf("clone") === -1
+          ) {
             //Disabling Camera
             xrScene.sceneCam.camera.detachControl();
             pickingAction(pickResult.pickedMesh, parentMesh);
@@ -77,7 +105,6 @@ export class Collision {
         trigger.onButtonStateChangedObservable.add((state) => {
           if (trigger.changes.pressed) {
             if (trigger.pressed) {
-
               if (xrScene.pickedMesh != null)
                 // make sure only one item is selected at a time
                 return;
@@ -90,7 +117,10 @@ export class Collision {
               ) {
                 GLOBAL.print("mesh under controllerx pointer: " + pickMesh);
                 // only allow picking if its a molecule
-                if (pickMesh.name.indexOf("Molecule") !== -1 && pickMesh.name.indexOf("clone") === -1) {
+                if (
+                  pickMesh.name.indexOf("Molecule") !== -1 &&
+                  pickMesh.name.indexOf("clone") === -1
+                ) {
                   const distance = Vector3.Distance(
                     motionController.rootMesh.getAbsolutePosition(),
                     pickMesh.getAbsolutePosition()
@@ -99,14 +129,14 @@ export class Collision {
                     GLOBAL.print(
                       "motionController.rootMesh " + motionController.rootMesh
                     );
-                    xrScene.locomotion?.disableTeleport()
+                    xrScene.locomotion?.disableTeleport();
                     pickingAction(pickMesh, motionController.rootMesh);
                   }
                 }
               }
             } else {
               releaseAction();
-              xrScene.locomotion?.enableTeleport()
+              xrScene.locomotion?.enableTeleport();
             }
           }
         });
@@ -120,6 +150,13 @@ export class Collision {
     if (
       xrScene.pickedMesh.intersectsMesh(xrScene.reactionZone.mesh, false, true)
     ) {
+      if(xrScene.grabTutDone && !xrScene.dropTutDone)
+      {
+        xrScene.dropTutDone = true
+        xrScene.reactIndicator.Hide()
+        xrScene.breakIndicator.Show()
+      }
+
       xrScene.reactionPanel.DeleteContainText("RESULT");
       xrScene.reactionPanel.ClearMolecules();
 
