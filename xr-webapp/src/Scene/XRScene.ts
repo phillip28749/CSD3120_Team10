@@ -32,7 +32,6 @@ import {
   DisplayPanel,
   MoleculeInZone,
   Indicator,
-  TextString,
 } from "../Component/index";
 import { SceneCamera } from "../Camera/SceneCamera";
 import { ParticleEvent } from "../Events/index";
@@ -120,7 +119,7 @@ export class XRScene {
 
     this.LoadEnvironment();
     this.LoadMolecules();
-    this.CreateReactionUI();
+    this.CreateReactionObjects();
     this.AddSounds();
   }
 
@@ -485,7 +484,7 @@ export class XRScene {
     });
   }
 
-  CreateReactionUI() {
+  CreateReactionObjects() {
     this.reactionParent = new AbstractMesh("reactionParent");
     this.CreateReactionZone();
     this.CreateReactionPanel();
