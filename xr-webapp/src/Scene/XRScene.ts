@@ -84,6 +84,10 @@ export class XRScene {
   observeTutDone: Boolean; //Time based
   finalTutDone: Boolean; //Time based
 
+  //Sound
+  bgm: Sound
+  reactionSound: Sound
+
   constructor(
     engine: Engine,
     canvas: HTMLCanvasElement,
@@ -121,10 +125,11 @@ export class XRScene {
   }
 
   AddSounds() {
-    const music = new Sound("music", "/sounds/bgm.m4a", this.scene, null, {
+    this.bgm = new Sound("music", "/sounds/bgm.m4a", this.scene, null, {
       loop: true,
       autoplay: true,
     });
+    this.reactionSound = new Sound("music", "/sounds/reactionSound.mp3", this.scene, null,);
   }
 
   SetLocomotion(locomotion: Locomotion) {
@@ -348,6 +353,8 @@ export class XRScene {
           let result = this.moleculeMg.getJoinResult();
           if (result != null) {
             GLOBAL.print("Reaction:" + result.name);
+            this.reactionSound.play()
+
             this.reactionPanel.AddNewText(result.name + "result", {
               text: "RESULT: " + result.name,
               fontSize: 100,
@@ -398,6 +405,7 @@ export class XRScene {
           }
 
           GLOBAL.print("Break clicked");
+          this.reactionSound.play()
 
           var xOffset: number = -1.6;
           let results = this.moleculeMg.getBreakResult();

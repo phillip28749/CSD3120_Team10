@@ -121,9 +121,9 @@ export class Collision {
                   pickMesh.name.indexOf("Molecule") !== -1 &&
                   pickMesh.name.indexOf("clone") === -1
                 ) {
-                  const distance = Vector3.Distance(
-                    motionController.rootMesh.getAbsolutePosition(),
-                    pickMesh.getAbsolutePosition()
+                    const distance = Vector3.Distance(
+                    motionController.rootMesh?.getAbsolutePosition(),
+                    pickMesh?.getAbsolutePosition()
                   );
                   if (distance < 1) {
                     GLOBAL.print(
@@ -131,8 +131,7 @@ export class Collision {
                     );
                     xrScene.locomotion?.disableTeleport();
                     pickingAction(pickMesh, motionController.rootMesh);
-                  }
-                }
+                }}
               }
             } else {
               releaseAction();
@@ -150,6 +149,7 @@ export class Collision {
     if (
       xrScene.pickedMesh.intersectsMesh(xrScene.reactionZone.mesh, false, true)
     ) {
+      xrScene.reactionSound.play()
       if(xrScene.grabTutDone && !xrScene.dropTutDone)
       {
         xrScene.dropTutDone = true
