@@ -1,6 +1,9 @@
 # CSD3120 Individual Project Assignment (IPA)
 
-## Ho Yi Guan - 2001595
+## Member:
+> Ho Yi Guan - 2001595 <br>
+> Chen Yen Hsun - 2002761 <br>
+> Seet Min Yi - 2002088 <br>
 
 ## Table of Contents
 
@@ -11,8 +14,8 @@
 
 
 ## Background
-App Built using Node, BabylonJS, and webpack with TypeScript.
-Target Device: **Oculus  Quest 2**.
+App Built using Node, BabylonJS, and webpack with TypeScript.<br>
+Target Device: **Oculus  Quest 2**.<br>
 
 ## Dependencies
 
@@ -59,7 +62,7 @@ You can trigger the react button using the controller's trigger keys, which will
 - Locomotion:\
 To move around within the scene, you can use teleportation by holding the trigger on the ground, allowing you to teleport within the XR environment.
 
-![Failed to load image from URL](./app.png)
+![Picture](https://github.com/phillip28749/CSD3120_Team10/blob/main/app.png)
 
 
 ## XRAuthor
