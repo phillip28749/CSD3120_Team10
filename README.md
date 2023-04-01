@@ -76,4 +76,4 @@ To move around within the scene, you can use teleportation by holding the trigge
 
 ## XRAuthor
 
-The XRAuthor video lesson can be found at "https://github.com/Hert97/csd3120-ipa/tree/sub/xrauthor-uploads/assets/synthesis/videos".
+The XRAuthor video lesson can be found at [Video](https://github.com/phillip28749/CSD3120_Team10/tree/main/xr-webapp/public/assets/synthesis).
