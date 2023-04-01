@@ -37,11 +37,20 @@ Target Device: **Oculus  Quest 2**.<br>
 
 Clone the project using git-clone.
 
-Install the required `Dependencies` using npm via npm install.
+Install the required `Dependencies` using 
+```cpp
+npm via npm install
+```
 
-Build the development environment using `npm run build`.
+Build the development environment using
+```cpp
+npm run build
+```
 
-Run the development server using `npm run serve`.
+Run the development server using
+```cpp
+npm run serve
+```
 
 Standalone app can be accessed from the local machine at http://localhost:3005/ from your local browser.
 
