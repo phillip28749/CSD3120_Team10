@@ -108,7 +108,7 @@ npm run serve
 **Available Reactions:**<br />
 There are currently only two valid reactions available in the app:\
 `1. C  + O2   -> CO2  (Carbon dioxide)`\
-`2. 6C + 3H2  -> C6H6 (Benzene)`<br />
+`2. 6C + 3H2  -> C6H6 (Benzene)`<br /><br /><br />
 
 **Locomotion:**<br />
 To move around within the scene, you can use teleportation by pointing a controller to the ground and holding the trigger for *2 seconds*, allowing you to teleport within the VR environment.
