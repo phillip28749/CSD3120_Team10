@@ -1,4 +1,4 @@
-# CSD3120 Individual Project Assignment (IPA)
+# CSD3120 Team VR Project
 
 ## Member:
 > Ho Yi Guan - 2001595 <br>
