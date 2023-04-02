@@ -1,22 +1,32 @@
-/**
-   * Creates and setup an xr scene
-   * @param   canvasID 
-   *          the rendering canvas id
-   * @param   authoringData
-   *          additional data
-   * @returns xr scene promise
-   */
+/*!*****************************************************************************
+\file	init.ts
+/*!*****************************************************************************
+\brief
+	This file contains the entry point for the vr application.
+*******************************************************************************/
+
 import { Engine } from "babylonjs";
 import { AuthoringData } from "xrauthor-loader";
 import { App } from "./app";
 
-export function createXRScene(
+/**
+ * Creates and setup the entry point of the vr application
+ *
+ * @param   canvasID
+ *          the rendering canvas id
+ *
+ * @param   authoringData
+ *          xr author data
+ *
+ * @returns xr scene promise
+ */
+export function createEntryPoint(
   canvasID: string,
-  authoringData: AuthoringData,
+  authoringData: AuthoringData
 ) {
-    /**
-     * Entry point for app
-     */
+  /**
+   * Entry point for vr app
+   */
   const canvas = <HTMLCanvasElement>document.getElementById(canvasID);
   const engine = new Engine(canvas, true);
 
@@ -34,4 +44,3 @@ export function createXRScene(
     engine.resize();
   });
 }
-

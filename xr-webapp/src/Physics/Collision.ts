@@ -1,13 +1,27 @@
-import {
-  AbstractMesh,
-  Vector3,
-  WebXRDefaultExperience,
-  WebXRFeatureName,
-} from "babylonjs";
+/*!*****************************************************************************
+\file	Collision.ts
+/*!*****************************************************************************
+\brief
+	This file contains the Collision class that include functions for collision 
+  interactions in the scene.
+*******************************************************************************/
+
+import { AbstractMesh, Vector3, WebXRDefaultExperience } from "babylonjs";
 import { XRScene } from "../Scene/XRScene";
 import { GLOBAL } from "../Global";
 
 export class Collision {
+  /**
+   * When the user picked on a molecule (using mouse [if DEBUG_MODE is enabled] / controller [if DEBUG_MODE is disabled])
+   *
+   * @param   xr
+   *          the given XR experience
+   *
+   * @param   xr
+   *          the given scene
+   *
+   * @returns none
+   */
   static OnPicking(xr: WebXRDefaultExperience, xrScene: XRScene) {
     const pickingAction = (
       pickedMesh: AbstractMesh,
@@ -20,10 +34,12 @@ export class Collision {
           xrScene.grabTutDone = true;
           xrScene.grabIndicator.Hide();
           xrScene.reactIndicator.Show();
-        }
-        else if(xrScene.dropTutDone && !xrScene.breakTutDone && m.label.textBlock.text !== "CO2")
-        {
-          xrScene.dropTutDone = false
+        } else if (
+          xrScene.dropTutDone &&
+          !xrScene.breakTutDone &&
+          m.label.textBlock.text !== "CO2"
+        ) {
+          xrScene.dropTutDone = false;
           xrScene.grabTutDone = false;
           xrScene.grabIndicator.Show();
           xrScene.reactIndicator.Hide();
@@ -77,9 +93,7 @@ export class Collision {
         //Grab mesh
         if (pickResult.hit) {
           //GLOBAL.print("Picking: " + pickResult.pickedMesh.parent);
-          if (
-            pickResult.pickedMesh.name.indexOf("Molecule") !== -1
-          ) {
+          if (pickResult.pickedMesh.name.indexOf("Molecule") !== -1) {
             //Disabling Camera
             xrScene.sceneCam.camera.detachControl();
             pickingAction(pickResult.pickedMesh, parentMesh);
@@ -117,7 +131,7 @@ export class Collision {
                 GLOBAL.print("mesh under controllerx pointer: " + pickMesh);
                 // only allow picking if its a molecule
                 if (pickMesh.name.indexOf("Molecule") !== -1) {
-                    const distance = Vector3.Distance(
+                  const distance = Vector3.Distance(
                     motionController.rootMesh?.getAbsolutePosition(),
                     pickMesh?.getAbsolutePosition()
                   );
@@ -127,7 +141,8 @@ export class Collision {
                     );
                     xrScene.locomotion?.disableTeleport();
                     pickingAction(pickMesh, motionController.rootMesh);
-                }}
+                  }
+                }
               }
             } else {
               releaseAction();
@@ -139,18 +154,25 @@ export class Collision {
     });
   }
 
+  /**
+   * When the molecule mesh interacts with the reaction zone
+   *
+   * @param   xr
+   *          the given scene
+   *
+   * @returns none
+   */
   static OnCollision(xrScene: XRScene) {
     //reaction zone trigger update
     if (!xrScene.pickedMesh) return;
     if (
       xrScene.pickedMesh.intersectsMesh(xrScene.reactionZone.mesh, false, true)
     ) {
-      xrScene.reactionSound.play()
-      if(xrScene.grabTutDone && !xrScene.dropTutDone)
-      {
-        xrScene.dropTutDone = true
-        xrScene.reactIndicator.Hide()
-        xrScene.breakIndicator.Show()
+      xrScene.reactionSound.play();
+      if (xrScene.grabTutDone && !xrScene.dropTutDone) {
+        xrScene.dropTutDone = true;
+        xrScene.reactIndicator.Hide();
+        xrScene.breakIndicator.Show();
       }
 
       xrScene.reactionPanel.DeleteContainText("RESULT");

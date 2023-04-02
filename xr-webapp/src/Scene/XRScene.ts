@@ -1,3 +1,11 @@
+/*!*****************************************************************************
+\file	XRScene.ts
+/*!*****************************************************************************
+\brief
+	This file contains the XRScene class that include functions for creating the 
+  scene of the vr application.
+*******************************************************************************/
+
 import {
   AbstractMesh,
   ActionManager,
@@ -12,7 +20,6 @@ import {
   Mesh,
   MeshBuilder,
   Nullable,
-  PointerEventTypes,
   Scene,
   SceneLoader,
   Sound,
@@ -54,7 +61,8 @@ export class XRScene {
   xrPromise: Promise<WebXRDefaultExperience>; // xr experience obj
   pickedMesh: Nullable<AbstractMesh>; // the mesh currently picked (attached under xrcontroller pointer / mouse pointer)
 
-  private _moleculeMg: MoleculeManager; // molecule object manager
+  //Molecule object manager
+  private _moleculeMg: MoleculeManager;
   public get moleculeMg(): MoleculeManager {
     return this._moleculeMg;
   }
@@ -62,6 +70,17 @@ export class XRScene {
     this._moleculeMg = value;
   }
 
+  //Reaction Zone
+  reactionParent: AbstractMesh;
+  reactionBtn: SceneButton;
+  reactionResetBtn: SceneButton;
+  reactionZone: ReactionZone; // the mesh representation for the scene's reaction zone
+  reactionPanel: DisplayPanel;
+
+  //Flag to check if the models has done loading and loaded other required data for the scene
+  loadedOtherData: Boolean;
+
+  //Tutorial indicators
   grabIndicator: Indicator;
   reactIndicator: Indicator;
   breakIndicator: Indicator;
@@ -69,14 +88,7 @@ export class XRScene {
   reactantsIndicator: Indicator;
   reactionsIndicator: Indicator;
 
-  reactionParent: AbstractMesh;
-  reactionBtn: SceneButton;
-  reactionResetBtn: SceneButton;
-  reactionZone: ReactionZone; // the mesh representation for the scene's reaction zone
-  reactionPanel: DisplayPanel;
-
-  loadedOtherData: Boolean;
-
+  //Tutorial flags
   grabTutDone: Boolean; //Action based
   dropTutDone: Boolean; //Action based
   breakTutDone: Boolean; //Action based
@@ -84,8 +96,8 @@ export class XRScene {
   finalTutDone: Boolean; //Time based
 
   //Sound
-  bgm: Sound
-  reactionSound: Sound
+  bgm: Sound;
+  reactionSound: Sound;
 
   constructor(
     engine: Engine,
@@ -123,18 +135,41 @@ export class XRScene {
     this.AddSounds();
   }
 
+  /**
+   * Add sounds such as bgm and reaction sound
+   *
+   * @returns none
+   */
   AddSounds() {
     this.bgm = new Sound("music", "/sounds/bgm.m4a", this.scene, null, {
       loop: true,
       autoplay: true,
     });
-    this.reactionSound = new Sound("music", "/sounds/reactionSound.mp3", this.scene, null,);
+    this.reactionSound = new Sound(
+      "music",
+      "/sounds/reactionSound.mp3",
+      this.scene,
+      null
+    );
   }
 
+  /**
+   * Sets the locomotion class
+   *
+   * @param   locomotion
+   *          the locomotion class to be assigned from
+   *
+   * @returns none
+   */
   SetLocomotion(locomotion: Locomotion) {
     this.locomotion = locomotion;
   }
 
+  /**
+   * Updates the game logic
+   *
+   * @returns none
+   */
   OnUpdate() {
     switch (this.moleculeMg.molInZone) {
       case MoleculeInZone.Reactant: {
@@ -153,6 +188,11 @@ export class XRScene {
     Collision.OnCollision(this);
   }
 
+  /**
+   * Loading the enviromental assets to the scene
+   *
+   * @returns none
+   */
   LoadEnvironment() {
     this.CreateSkyBox();
     this.CreateLight();
@@ -163,7 +203,8 @@ export class XRScene {
 
   /**
    * Create a skybox for the scene
-   * @param scene the given scene to create the skybox
+   *
+   * @returns none
    */
   CreateSkyBox() {
     /* Skybox */
@@ -200,6 +241,11 @@ export class XRScene {
     this.scene.ambientColor = new Color3(0.3, 0.3, 0.3);
   }
 
+  /**
+   * Create a light for the scene
+   *
+   * @returns none
+   */
   CreateLight() {
     this.hemLight = new HemisphericLight(
       "Hemi",
@@ -211,8 +257,9 @@ export class XRScene {
   }
 
   /**
-   * Loads and setup the environment and molecule meshes
-   * @param scene the given scene to load in
+   * Loads and setup the molecule meshes
+   *
+   * @returns none
    */
   LoadMolecules() {
     //load molecules
@@ -311,15 +358,22 @@ export class XRScene {
     });
   }
 
+  /**
+   * Setup the rest of the scene after the molecule meshes
+   * has been loaded properly
+   *
+   * @returns none
+   */
   AfterMoleculeLoaded() {
-    this.CreateXRAuthorVideo(0.82, new Vector3(7.15, 1.51, 0), this.scene);
+    this.CreateXRAuthorVideo(0.82, new Vector3(7.15, 1.51, 0));
 
     this.CreateIndicators();
   }
 
   /**
-   * Creates and setup the interaction buttons in the scene
+   * Create the reaction buttons for the scene
    *
+   * @returns none
    */
   CreateReactionBtns() {
     //Reset Reactions
@@ -352,7 +406,7 @@ export class XRScene {
           let result = this.moleculeMg.getJoinResult();
           if (result != null) {
             GLOBAL.print("Reaction:" + result.name);
-            this.reactionSound.play()
+            this.reactionSound.play();
 
             this.reactionPanel.AddNewText(result.name + "result", {
               text: "RESULT: " + result.name,
@@ -399,12 +453,11 @@ export class XRScene {
                 this.reactantsIndicator.Hide();
                 this.reactionsIndicator.Hide();
               }, 5000);
-
             }, 3000);
           }
 
           GLOBAL.print("Break clicked");
-          this.reactionSound.play()
+          this.reactionSound.play();
 
           var xOffset: number = -1.6;
           let results = this.moleculeMg.getBreakResult();
@@ -450,6 +503,11 @@ export class XRScene {
     this.reactionBtn.setParent(this.reactionParent);
   }
 
+  /**
+   * Create the reaction zone for the scene
+   *
+   * @returns none
+   */
   CreateReactionZone() {
     //create reaction zone
     this.reactionZone = new ReactionZone(
@@ -465,6 +523,11 @@ export class XRScene {
     this.reactionZone.setParent(this.reactionParent);
   }
 
+  /**
+   * Create the reaction panel for the scene
+   *
+   * @returns none
+   */
   CreateReactionPanel() {
     //create display panel for the reaction
     this.reactionPanel = new DisplayPanel(
@@ -484,6 +547,11 @@ export class XRScene {
     });
   }
 
+  /**
+   * Create all the reaction related objects for the scene
+   *
+   * @returns none
+   */
   CreateReactionObjects() {
     this.reactionParent = new AbstractMesh("reactionParent");
     this.CreateReactionZone();
@@ -492,6 +560,11 @@ export class XRScene {
     this.reactionParent.position = new Vector3(5.85, 0.83, -0.33);
   }
 
+  /**
+   * Create the tutorial indicators for the scene
+   *
+   * @returns none
+   */
   CreateIndicators() {
     const outlineWidth = 10;
 
@@ -581,7 +654,18 @@ export class XRScene {
     this.observeIndicator.indText.textBlock.textWrapping = false;
   }
 
-  CreateXRAuthorVideo(videoHeight: number, position: Vector3, scene: Scene) {
+  /**
+   * Create the xr author video for the scene
+   *
+   * @param   videoHeight
+   *          the height of the video plane
+   *
+   * @param   position
+   *          the position of the video plane
+   *
+   * @returns none
+   */
+  CreateXRAuthorVideo(videoHeight: number, position: Vector3) {
     //Video player
     const videoWidth = videoHeight * this.authorData.recordingData.aspectRatio;
     const videoPlane = MeshBuilder.CreatePlane(
@@ -590,14 +674,14 @@ export class XRScene {
         height: videoHeight,
         width: videoWidth,
       },
-      scene
+      this.scene
     );
     videoPlane.position = position;
-    const videoMaterial = new StandardMaterial("xrauthorMaterial", scene);
+    const videoMaterial = new StandardMaterial("xrauthorMaterial", this.scene);
     const videoTexture = new VideoTexture(
       "xrauthorTexture",
       this.authorData.video,
-      scene
+      this.scene
     );
     videoTexture.onUserActionRequestedObservable.add(() => {});
     videoMaterial.diffuseTexture = videoTexture;
@@ -615,11 +699,11 @@ export class XRScene {
         height: videoHeight + videoBorderHeight,
         width: videoWidth + videoBorderWidth,
       },
-      scene
+      this.scene
     );
     videoBorderPlane.position = videoPlane.position.clone();
     videoBorderPlane.position.z += 0.001;
-    var borderMat = new StandardMaterial("borderMat", scene);
+    var borderMat = new StandardMaterial("borderMat", this.scene);
     borderMat.emissiveColor = Color3.Gray();
     borderMat.diffuseColor = Color3.Gray();
     borderMat.backFaceCulling = false; // disable backface culling
@@ -638,7 +722,7 @@ export class XRScene {
       const newBtn = MeshBuilder.CreatePlane(
         "btnPlane",
         { width: btnWidth, height: btnHeight },
-        scene
+        this.scene
       );
       const btnTexture = AdvancedDynamicTexture.CreateForMesh(
         newBtn,
@@ -793,7 +877,7 @@ export class XRScene {
     videoTexture.video.autoplay = false;
     const animationGroup = new AnimationGroup(
       "xrauthor animation group",
-      scene
+      this.scene
     );
 
     //XRAuthor Animation

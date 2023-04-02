@@ -1,7 +1,12 @@
+/*!*****************************************************************************
+\file	Indicator.ts
+/*!*****************************************************************************
+\brief
+	This file contains the Indicator class for creating a tutorial indicator.
+*******************************************************************************/
+
 import {
   Color3,
-  Color4,
-  Engine,
   Mesh,
   MeshBuilder,
   Scene,
@@ -65,8 +70,8 @@ export class Indicator extends TransformNode {
     this.indPlane.setParent(this);
     this.indPlane.isPickable = false;
 
-    //Arrow Animation 
-    const animationOffset = 0.03
+    //Arrow Animation
+    const animationOffset = 0.03;
     var arrowAnimation = new Animation(
       "arrowAnimation",
       "position.y",
@@ -75,7 +80,7 @@ export class Indicator extends TransformNode {
       Animation.ANIMATIONLOOPMODE_CYCLE
     );
 
-    const arrowIniPos = this.indPlane.position.y
+    const arrowIniPos = this.indPlane.position.y;
     var arrowKF = [];
     arrowKF.push({
       frame: 0,
@@ -102,13 +107,13 @@ export class Indicator extends TransformNode {
     scene.beginAnimation(this.indPlane, 0, 60, true);
 
     //Text
-    textOptions.fontSize = 50
+    textOptions.fontSize = 50;
     this.indText = new TextString(id + "indText", textOptions);
     this.indText.scaling.setAll(0.7);
     this.indText.position.y = 0.2;
     this.indText.setParent(this);
 
-    //Text Animation 
+    //Text Animation
     var textAnimation = new Animation(
       "textAnimation",
       "position.y",
@@ -116,7 +121,7 @@ export class Indicator extends TransformNode {
       Animation.ANIMATIONTYPE_FLOAT,
       Animation.ANIMATIONLOOPMODE_CYCLE
     );
-    const textIniPos = this.indText.position.y
+    const textIniPos = this.indText.position.y;
     var textKF = [];
     textKF.push({
       frame: 0,
@@ -141,21 +146,28 @@ export class Indicator extends TransformNode {
     textAnimation.setKeys(textKF);
     this.indText.animations.push(textAnimation);
     scene.beginAnimation(this.indText, 0, 60, true);
-    
+
     //Position the Indicator
     this.position = position;
     this.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
     this.Hide();
   }
 
-  Show()
-  {
-    this.setEnabled(true)
-  
+  /**
+   * Show the tutorial indicator
+   *
+   * @returns none
+   */
+  Show() {
+    this.setEnabled(true);
   }
 
-  Hide()
-  {
-    this.setEnabled(false)
+  /**
+   * Hide the tutorial indicator
+   *
+   * @returns none
+   */
+  Hide() {
+    this.setEnabled(false);
   }
 }

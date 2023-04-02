@@ -1,2 +1,9 @@
-export * from './ParticleEvent'
-export * from './TimeEvent'
+/*!*****************************************************************************
+\file	index.ts
+/*!*****************************************************************************
+\brief
+	This file contains codes to be exported from the Events folder.
+*******************************************************************************/
+
+export * from "./ParticleEvent";
+export * from "./TimeEvent";

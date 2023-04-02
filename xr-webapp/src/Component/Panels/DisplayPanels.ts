@@ -1,9 +1,14 @@
+/*!*****************************************************************************
+\file	DisplayPanel.ts
+/*!*****************************************************************************
+\brief
+	This file contains the DisplayPanel class that include functions for creating 
+  the display panel, appending the text onto the display panel and removing 
+  text from the display panel
+*******************************************************************************/
+
 import {
-  AbstractMesh,
-  ActionManager,
   Color3,
-  Color4,
-  ExecuteCodeAction,
   Mesh,
   MeshBuilder,
   Nullable,
@@ -11,13 +16,9 @@ import {
   Scene,
   Space,
   StandardMaterial,
-  Texture,
   TransformNode,
   Vector3,
-  VertexBuffer,
-  VertexData,
 } from "babylonjs";
-import { AdvancedDynamicTexture, TextBlock } from "babylonjs-gui";
 import { GLOBAL } from "../../Global";
 import { Molecule } from "../Molecules/Molecule";
 import { MoleculeManager } from "../Molecules/MoleculeManager";
@@ -59,8 +60,8 @@ export class DisplayPanel extends TransformNode {
       panelOptions?.color ?? new Color3(0.0, 0.0, 0.0);
     this.panelMat.alpha = panelOptions?.transparency ?? 1.0;
 
-    const planeWidth = panelOptions?.width ?? 1.5
-    const planeHeight = panelOptions?.height ?? 1.5
+    const planeWidth = panelOptions?.width ?? 1.5;
+    const planeHeight = panelOptions?.height ?? 1.5;
     this.panelPlane = MeshBuilder.CreatePlane("panelPlane:" + id, {
       width: planeWidth,
       height: planeHeight,
@@ -74,6 +75,17 @@ export class DisplayPanel extends TransformNode {
     this.rotate(Vector3.Up(), Math.PI * 0.5, Space.LOCAL);
   }
 
+  /**
+   *  Add a new text string to the display panel
+   *
+   * @param  id
+   *         The id of the new text to be added
+   *
+   * @param  textOptions
+   *         The text options for the new text
+   *
+   * @returns none
+   */
   AddNewText(
     id: string,
     textOptions?: {
@@ -113,6 +125,17 @@ export class DisplayPanel extends TransformNode {
     this.textStrings.push(textString);
   }
 
+  /**
+   *  Edit an existing string of texts on the display panel
+   *
+   * @param  id
+   *         The id of the text to be edited
+   *
+   * @param  text
+   *         The string of texts to be changed to
+   *
+   * @returns none
+   */
   EditText(id: string, text: string) {
     for (var i = 0; i < this.textStrings.length; ++i) {
       if (this.textStrings[i].id.search(id) !== -1) {
@@ -122,6 +145,14 @@ export class DisplayPanel extends TransformNode {
     }
   }
 
+  /**
+   *  Clears all the text on the display panel, but exclude the list of ids provided
+   *
+   * @param  excludedIds
+   *         The list of ids to be excluded from clearing
+   *
+   * @returns none
+   */
   ClearText(...excludedIds: string[]) {
     var textStringList: TextString[];
     textStringList = [];
@@ -149,6 +180,14 @@ export class DisplayPanel extends TransformNode {
     this.textStrings = [...textStringList];
   }
 
+  /**
+   *  Delete a text on the display panel
+   *
+   * @param  id
+   *         The id to be deleted from the display panel
+   *
+   * @returns none
+   */
   DeleteText(id: string) {
     let index = this.textStrings.findIndex((textString) => {
       let tempIndex = textString.textPlane.id.indexOf("panelText");
@@ -166,9 +205,17 @@ export class DisplayPanel extends TransformNode {
     }
   }
 
-  DeleteContainText(text: string) {
+  /**
+   *  Delete a text on the display panel that contains a certain word
+   *
+   * @param  word
+   *         The word to be searched for when deleting the text
+   *
+   * @returns none
+   */
+  DeleteContainText(word: string) {
     let index = this.textStrings.findIndex((textString) => {
-      if (textString.textBlock.text.search(text) !== -1) {
+      if (textString.textBlock.text.search(word) !== -1) {
         textString.dispose();
         return true;
       }
@@ -180,6 +227,14 @@ export class DisplayPanel extends TransformNode {
     }
   }
 
+  /**
+   *  Find a text on the display panel
+   *
+   * @param  id
+   *         The id to be searched for in the display panel
+   *
+   * @returns the text found
+   */
   FindText(id: string): Nullable<TextString> {
     let index = this.textStrings.findIndex((textString) => {
       let tempIndex = textString.textPlane.id.indexOf("panelText");
@@ -197,6 +252,20 @@ export class DisplayPanel extends TransformNode {
     return null;
   }
 
+  /**
+   *  Adds a molecule to the display panel
+   *
+   * @param  name
+   *         The name of the molecule to search for and add to the display panel
+   *
+   * @param  moleculeMg
+   *         The molecule manager to find the molecule and clone it
+   *
+   * @param  position
+   *         The position to place the clone molecule on the display panel
+   *
+   * @returns the newly cloned molecule
+   */
   AddNewMolecule(
     name: string,
     moleculeMg: MoleculeManager,
@@ -232,6 +301,11 @@ export class DisplayPanel extends TransformNode {
     return null;
   }
 
+  /**
+   *  Clears all the molecules on the display panel
+   *
+   * @returns none
+   */
   ClearMolecules() {
     while (this.moleculeList.length > 0) {
       const tempMol = this.moleculeList.pop();

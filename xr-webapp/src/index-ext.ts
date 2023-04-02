@@ -1,3 +1,10 @@
-import { createXRScene } from "./init";
+/*!*****************************************************************************
+\file	index-ext.ts
+/*!*****************************************************************************
+\brief
+	This file sets up the extension to create.
+*******************************************************************************/
 
-window["extension"] = { createXRScene: createXRScene };
+import { createEntryPoint } from "./init";
+
+window["extension"] = { createEntryPoint: createEntryPoint };

@@ -1,6 +1,14 @@
-import {AuthoringData, loadAuthoringData} from 'xrauthor-loader'
-import {createXRScene} from './init'
+/*!*****************************************************************************
+\file	index.ts
+/*!*****************************************************************************
+\brief
+	This file contains the function to load the xr author data into the vr 
+    application.
+*******************************************************************************/
 
-loadAuthoringData('assets/synthesis').then((data: AuthoringData) => {
-    createXRScene('renderCanvas', data)
-})
+import { AuthoringData, loadAuthoringData } from "xrauthor-loader";
+import { createEntryPoint } from "./init";
+
+loadAuthoringData("assets/synthesis").then((data: AuthoringData) => {
+  createEntryPoint("renderCanvas", data);
+});

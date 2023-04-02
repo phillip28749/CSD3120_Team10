@@ -1,18 +1,20 @@
-import { AbstractMesh, PointerDragBehavior, Vector3 } from "babylonjs";
-import { MoleculeLabel } from './MoleculeLabel'
+/*!*****************************************************************************
+\file	Molecule.ts
+/*!*****************************************************************************
+\brief
+	This file contains the Molecule class for creating a molecule.
+*******************************************************************************/
+
+import { AbstractMesh } from "babylonjs";
+import { MoleculeLabel } from "./MoleculeLabel";
 import { GLOBAL } from "../../Global";
 
 export class Molecule {
   mesh: AbstractMesh;
   name: string;
   uniqueIds: number[];
-  label : MoleculeLabel;
+  label: MoleculeLabel;
 
-  /**
-   * constructor of a molecule obj
-   * @param name
-   *        chemical symbol of molecule/compound
-   */
   constructor(name: string, mesh: AbstractMesh) {
     this.mesh = mesh;
     this.name = name;

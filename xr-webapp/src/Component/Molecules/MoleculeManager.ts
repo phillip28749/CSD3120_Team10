@@ -1,3 +1,11 @@
+/*!*****************************************************************************
+\file	MoleculeManager.ts
+/*!*****************************************************************************
+\brief
+	This file contains the MoleculeManager class for managing the molecules in 
+  the scene.
+*******************************************************************************/
+
 import { AbstractMesh, Nullable, Vector3 } from "babylonjs";
 import { GLOBAL } from "../../Global";
 import { XRScene } from "../../Scene/XRScene";
@@ -38,24 +46,42 @@ export class MoleculeManager {
     this.reactList = new Map<string, number>();
   }
 
+  /**
+   *  Gets all the reactant molecules in the reactant list
+   *
+   * @returns the list of reactant molecules
+   */
   getAllReactants(): Molecule[] {
     return this.reactants;
   }
 
+  /**
+   *  Gets all the reaction molecules in the reactions list
+   *
+   * @returns the list of reaction molecules
+   */
   getAllReactions(): Molecule[] {
     return this.reactions;
   }
 
+  /**
+   *  Gets all the molecules in the molecule list
+   *
+   * @returns the list of molecules
+   */
   getAllMolecules(): Molecule[] {
     return this.moleculeList;
   }
 
-  /**
-   * Adds a molecule to the reaction list used to check for reaction
-   * @param  m
-   *         The reactant molecule obj
-   */
   private static molCounter: number = 0;
+  /**
+   *  Adds a molecule to the react list
+   *
+   * @param  m
+   *         The molecule object to be added
+   *
+   * @returns none
+   */
   addMoleculeToList(m: Nullable<Molecule>) {
     //Check the type of molecule added to the zone
     var addingMol = MoleculeInZone.None;
@@ -141,7 +167,9 @@ export class MoleculeManager {
   }
 
   /**
-   * Clears the reaction list and reset it
+   * Clears the react list and reset the reaction panel
+   *
+   * @returns none
    */
   ResetReactList() {
     this.ClearReactList();
@@ -149,6 +177,11 @@ export class MoleculeManager {
     this.xrScene.reactionPanel.ClearMolecules();
   }
 
+  /**
+   * Clears the reaction list
+   *
+   * @returns none
+   */
   ClearReactList() {
     this.moleculeList.forEach((m) => {
       this.reactList.set(m.name, 0);
@@ -159,9 +192,11 @@ export class MoleculeManager {
   }
 
   /**
-   * Push a molecule to the list of available reactants
+   * Push a molecule to the reactant and molecule lists
    * @param   m
    *          The reactant molecule obj
+   *
+   * @returns none
    */
   pushReactants(m: Molecule) {
     this.reactants.push(m);
@@ -170,9 +205,12 @@ export class MoleculeManager {
   }
 
   /**
-   * Push a molecule to the list of available result from reaction
+   * Push a molecule to the reaction and molecule lists
+   *
    * @param   m
-   *          The reactant molecule obj
+   *          The reaction molecule object
+   *
+   * @returns none
    */
   pushReactions(m: Molecule) {
     this.reactions.push(m);
@@ -181,11 +219,12 @@ export class MoleculeManager {
   }
 
   /**
-   * Finds a reactant master mesh's root by using its own/children's unique mesh id.
+   * Finds a reactant master mesh root by using its own/children's unique mesh id.
+   *
    * @param   id
    *          The unique id of mesh to perform search
-   * @returns
-   *          The master molecule object in the reactant list
+   *
+   * @returns The master molecule object in the molecule list
    */
   findMolecule(id: number): Nullable<Molecule> {
     for (let m of this.moleculeList) {
@@ -199,10 +238,9 @@ export class MoleculeManager {
   }
 
   /**
-   * Gets the result from the reaction
-   * @returns
-   *          The resulting molecule object from the reaction,
-   *          null is return if the process fails.
+   * Get the result of the joined molecules
+   *
+   * @returns The resulting molecule object from the reaction
    */
   getJoinResult(): Nullable<Molecule> {
     var m: Nullable<Molecule> = null;
@@ -252,6 +290,11 @@ export class MoleculeManager {
     return m;
   }
 
+  /**
+   * Get the result of the broken molecules
+   *
+   * @returns The broken molecules in an array
+   */
   getBreakResult(): Molecule[] {
     const isAlphabet = (char: string): boolean => /[a-zA-Z]/.test(char);
 
@@ -326,11 +369,12 @@ export class MoleculeManager {
   }
 
   /**
-   * Clones the given molecule's meshs,material and transform
+   * Clones the given molecule meshs, material and transform
+   *
    * @param   m
    *          The molecule to clone
-   * @returns
-   *          The cloned molecule's mesh
+   *
+   * @returns The cloned molecule mesh
    */
   cloneMesh(m: Molecule): Nullable<AbstractMesh> {
     let clonedMesh = m.mesh.clone(m.mesh.name + "_clone", null);
@@ -338,6 +382,14 @@ export class MoleculeManager {
     return clonedMesh;
   }
 
+  /**
+   * Clones the given molecule
+   *
+   * @param   m
+   *          The molecule to clone
+   *
+   * @returns The cloned molecule
+   */
   cloneMolecule(m: Molecule): Nullable<Molecule> {
     let clonedMol = new Molecule(
       m.name + "_clone",

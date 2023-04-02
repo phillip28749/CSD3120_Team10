@@ -1,2 +1,9 @@
-export * from './Controller'
-export * from './Locomotion'
+/*!*****************************************************************************
+\file	index.ts
+/*!*****************************************************************************
+\brief
+	This file contains codes to be exported from the Input folder.
+*******************************************************************************/
+
+export * from "./Controller";
+export * from "./Locomotion";
