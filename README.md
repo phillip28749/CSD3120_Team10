@@ -5,7 +5,7 @@
 > Chen Yen Hsun - 2002761 <br>
 > Seet Min Yi - 2002088 <br>
 > Edwin Poh Yi Han - 2001033 <br>
-> Syaakir - 2001998 <br>
+> Mohd Syaakir - 2001998 <br>
 > Sim Chin Hin - 2001246 <br>
 
 ## Table of Contents
